@@ -11,7 +11,7 @@ from joblib import Parallel, delayed
 from tqdm import tqdm
 
 class Cascade_Analyzer:
-    def __init__(self, name, hit_hist, n_init, pairs_path, skids_in_hit_hist=True, adj_index=None): # changed mg to adj_index for custom/modified adj matrices
+    def __init__(self, name, hit_hist, n_init, skids_in_hit_hist=True, adj_index=None): # changed mg to adj_index for custom/modified adj matrices
         self.hit_hist = hit_hist
         self.name = name
         self.n_init = n_init
@@ -22,8 +22,6 @@ class Cascade_Analyzer:
             self.adj_index = adj_index
             self.skid_hit_hist = pd.DataFrame(hit_hist, index = self.adj_index) # convert indices to skids
 
-        self.pairs = Promat.get_pairs(pairs_path)
-
     def get_hit_hist(self):
         return(self.hit_hist)
 
@@ -32,9 +30,6 @@ class Cascade_Analyzer:
 
     def get_name(self):
         return(self.name)
-
-    def set_pairs(self, pairs):
-        self.pairs = pairs
 
     def index_to_skid(self, index):
         return(self.adj_index[index].name)
@@ -47,7 +42,7 @@ class Cascade_Analyzer:
             print(f'Not one match for skid {skid}!')
             return(False)
 
-    def pairwise_threshold_detail(self, threshold, hops, excluded_skids=False, include_source=False):
+    def pairwise_threshold_detail(self, threshold, hops, pairs_path, excluded_skids=False, include_source=False):
 
         if(include_source):
             neurons = np.where((self.skid_hit_hist.iloc[:, 0:(hops+1)]).sum(axis=1)>threshold)[0]
@@ -60,11 +55,11 @@ class Cascade_Analyzer:
         if(excluded_skids!=False): 
             neurons = np.delete(neurons, excluded_skids)
 
-        neurons_pairs, neurons_unpaired, neurons_nonpaired = Promat.extract_pairs_from_list(neurons, self.pairs)
+        neurons_pairs, neurons_unpaired, neurons_nonpaired = Promat.extract_pairs_from_list(neurons, Promat.get_pairs(pairs_path))
         return(neurons_pairs, neurons_unpaired, neurons_nonpaired)
 
-    def pairwise_threshold(self, threshold, hops, excluded_skids=False, include_source=False):
-        neurons_pairs, neurons_unpaired, neurons_nonpaired = Cascade_Analyzer.pairwise_threshold_detail(self, threshold, hops, excluded_skids=excluded_skids, include_source=include_source)
+    def pairwise_threshold(self, threshold, hops, pairs_path, excluded_skids=False, include_source=False):
+        neurons_pairs, neurons_unpaired, neurons_nonpaired = Cascade_Analyzer.pairwise_threshold_detail(self, threshold, hops, pairs_path, excluded_skids=excluded_skids, include_source=include_source)
         skids = np.concatenate([neurons_pairs.leftid, neurons_pairs.rightid, neurons_nonpaired.nonpaired])
         return(skids)
 
