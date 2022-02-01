@@ -143,6 +143,6 @@ class Cascade_Analyzer:
         )
 
         cascade = Cascade_Analyzer.run_cascade(i = source_indices, cdispatch = cdispatch)
-        data = Cascade_Analyzer(name=name, hit_hist=cascade, skids_in_hit_hist=False, adj_index=adj.index)
+        data = Cascade_Analyzer(name=name, hit_hist=cascade, n_init=n_init, skids_in_hit_hist=False, adj_index=adj.index)
         return(data)
 
