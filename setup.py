@@ -1,5 +1,6 @@
-from distutils.core import setup
+from setuptools import setup, find_packages
+
 setup(name='contools',
       version='0.1',
-      py_modules=['contools'],
+      packages=find_packages(include=['contools'])
       )
