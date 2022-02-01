@@ -3,8 +3,8 @@ import numpy as np
 import pandas as pd
 import contools.process_matrix as pm
 
-from contools.traverse import Cascade, to_transmission_matrix
-from contools.traverse import TraverseDispatcher
+#from contools.traverse import Cascade, to_transmission_matrix
+#from contools.traverse import TraverseDispatcher
 from joblib import Parallel, delayed
 from tqdm import tqdm
 
