@@ -2,6 +2,7 @@
 import numpy as np
 import pandas as pd
 from contools.process_matrix import Promat
+from contools.traverse import Cascade, to_transmission_matrix, TraverseDispatcher
 
 #from contools.traverse import Cascade, to_transmission_matrix
 #from contools.traverse import TraverseDispatcher
