@@ -8,12 +8,12 @@ import pymaid
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 import itertools
-import contools.process_matrix as pm
+from contools.process_matrix import Promat
 
 from upsetplot import plot
 from upsetplot import from_contents
 from upsetplot import from_memberships
-import contools.cluster_analysis as clust
+from contools.cluster_analysis import Analyze_Cluster
 import navis
 
 class Celltype:
@@ -49,7 +49,7 @@ class Celltype:
             bottom = bottom + memberships.iloc[i]
 
     def identify_LNs(self, threshold, summed_adj, adj_aa, input_skids, outputs, exclude, pairs_path, sort = True):
-        pairs = pm.Promat.get_pairs(pairs_path)
+        pairs = Promat.get_pairs(pairs_path)
         mat = summed_adj.loc[np.intersect1d(summed_adj.index, self.skids), np.intersect1d(summed_adj.index, self.skids)]
         mat = mat.sum(axis=1)
 
@@ -69,7 +69,7 @@ class Celltype:
 
             skid_percent_output.append([skid, skid_output])
 
-        skid_percent_output = pm.Promat.convert_df_to_pairwise(pd.DataFrame(skid_percent_output, columns=['skid', 'percent_output_intragroup']).set_index('skid'))
+        skid_percent_output = Promat.convert_df_to_pairwise(pd.DataFrame(skid_percent_output, columns=['skid', 'percent_output_intragroup']).set_index('skid'))
 
         # identify neurons with >=50% output within group (or axoaxonic onto input neurons to group)
         LNs = skid_percent_output.groupby('pair_id').sum()      
@@ -81,7 +81,7 @@ class Celltype:
         return(LNs, skid_percent_output)
     
     def identify_in_out_LNs(self, threshold, summed_adj, outputs, inputs, exclude, pairs_path, sort = True):
-        pairs = pm.Promat.get_pairs(pairs_path)
+        pairs = Promat.get_pairs(pairs_path)
         mat_output = summed_adj.loc[:, np.intersect1d(summed_adj.index, self.skids)]
         mat_output = mat_output.sum(axis=1)
         mat_input = summed_adj.loc[np.intersect1d(summed_adj.index, self.skids), :]
@@ -104,7 +104,7 @@ class Celltype:
             
             skid_percent_in_out.append([skid, skid_input, skid_output])
 
-        skid_percent_in_out = pm.Promat.convert_df_to_pairwise(pd.DataFrame(skid_percent_in_out, columns=['skid', 'percent_input_from_group', 'percent_output_to_group']).set_index('skid'))
+        skid_percent_in_out = Promat.convert_df_to_pairwise(pd.DataFrame(skid_percent_in_out, columns=['skid', 'percent_input_from_group', 'percent_output_to_group']).set_index('skid'))
 
         # identify neurons with >=50% output within group (or axoaxonic onto input neurons to group)
         LNs = skid_percent_in_out.groupby('pair_id').sum()      
@@ -468,7 +468,7 @@ class Celltype_Analyzer:
 def plot_cell_types_cluster(lvl_labels, path):
 
     _, all_celltypes = Celltype_Analyzer.default_celltypes()
-    lvl = clust.Analyze_Cluster('cascades/data/meta-method=color_iso-d=8-bic_ratio=0.95-min_split=32.csv', 'data/meta_data_w_order.csv', lvl_labels)
+    lvl = Analyze_Cluster('cascades/data/meta-method=color_iso-d=8-bic_ratio=0.95-min_split=32.csv', 'data/meta_data_w_order.csv', lvl_labels)
 
     all_clusters = [Celltype(lvl.clusters.cluster[i], lvl.clusters.skids[i]) for i in range(0, len(lvl.clusters))]
     cluster_analyze = Celltype_Analyzer(all_clusters)
@@ -493,7 +493,7 @@ def plot_marginal_cell_type_cluster(size, particular_cell_type, particular_color
     if(all_celltypes==None):
         _, all_celltypes = Celltype_Analyzer.default_celltypes()
         
-    clusters = clust.Analyze_Cluster(cluster_lvl=cluster_level)
+    clusters = Analyze_Cluster(cluster_lvl=cluster_level)
 
     #all_clusters = [Celltype(lvl.cluster_df.cluster[i], lvl.cluster_df.skids[i]) for i in range(0, len(lvl.clusters))]
     cluster_analyze = clusters.cluster_cta
@@ -626,9 +626,9 @@ def chromosome_plot(df, path, celltypes, plot_type='raw_norm', simple=False, spa
 
 def plot_celltype(path, pairids, n_rows, n_cols, celltypes, pairs_path, plot_pairs=True, connectors=False, cn_size=0.25, color=None, names=False, plot_padding=[0,0]):
 
-    pairs = pm.Promat.get_pairs(pairs_path)
+    pairs = Promat.get_pairs(pairs_path)
     # pull specific cell type identities
-    celltype_ct = [Celltype(f'{pairid}-ipsi-bi', pm.Promat.get_paired_skids(pairid, pairs)) for pairid in pairids]
+    celltype_ct = [Celltype(f'{pairid}-ipsi-bi', Promat.get_paired_skids(pairid, pairs)) for pairid in pairids]
     celltype_ct = Celltype_Analyzer(celltype_ct)
     celltype_ct.set_known_types(celltypes)
     members = celltype_ct.memberships()
@@ -636,7 +636,7 @@ def plot_celltype(path, pairids, n_rows, n_cols, celltypes, pairs_path, plot_pai
     # link identities to official celltype colors 
     celltype_identities = [np.where(members.iloc[:, i]==1.0)[0][0] for i in range(0, len(members.columns))]
     if(plot_pairs):
-        celltype_ct = [Celltype(celltypes[celltype_identities[i]].name.replace('s', ''), pm.Promat.get_paired_skids(pairid, pairs), celltypes[celltype_identities[i]].color) if celltype_identities[i]<17 else Celltype(f'{pairid}', pm.Promat.get_paired_skids(pairid, pairs), '#7F7F7F') for i, pairid in enumerate(pairids)]
+        celltype_ct = [Celltype(celltypes[celltype_identities[i]].name.replace('s', ''), Promat.get_paired_skids(pairid, pairs), celltypes[celltype_identities[i]].color) if celltype_identities[i]<17 else Celltype(f'{pairid}', Promat.get_paired_skids(pairid, pairs), '#7F7F7F') for i, pairid in enumerate(pairids)]
     if(plot_pairs==False):
         celltype_ct = [Celltype(celltypes[celltype_identities[i]].name.replace('s', ''), pairid, celltypes[celltype_identities[i]].color) if celltype_identities[i]<17 else Celltype('Other', pairid, '#7F7F7F') for i, pairid in enumerate(pairids)]
 

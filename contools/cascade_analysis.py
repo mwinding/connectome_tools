@@ -1,7 +1,7 @@
 # object for analysing hit_histograms from cascades run using TraverseDispatcher
 import numpy as np
 import pandas as pd
-import contools.process_matrix as pm
+from contools.process_matrix import Promat
 
 #from contools.traverse import Cascade, to_transmission_matrix
 #from contools.traverse import TraverseDispatcher
@@ -20,7 +20,7 @@ class Cascade_Analyzer:
             self.adj_index = adj_index
             self.skid_hit_hist = pd.DataFrame(hit_hist, index = self.adj_index) # convert indices to skids
 
-        self.pairs = pm.Promat.get_pairs(pairs_path)
+        self.pairs = Promat.get_pairs(pairs_path)
 
     def get_hit_hist(self):
         return(self.hit_hist)
@@ -58,7 +58,7 @@ class Cascade_Analyzer:
         if(excluded_skids!=False): 
             neurons = np.delete(neurons, excluded_skids)
 
-        neurons_pairs, neurons_unpaired, neurons_nonpaired = pm.Promat.extract_pairs_from_list(neurons, self.pairs)
+        neurons_pairs, neurons_unpaired, neurons_nonpaired = Promat.extract_pairs_from_list(neurons, self.pairs)
         return(neurons_pairs, neurons_unpaired, neurons_nonpaired)
 
     def pairwise_threshold(self, threshold, hops, excluded_skids=False, include_source=False):

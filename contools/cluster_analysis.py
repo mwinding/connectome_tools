@@ -7,9 +7,8 @@ import pymaid as pymaid
 #from pymaid_creds import url, name, password, token
 #rm = pymaid.CatmaidInstance(url, token, name, password)
 
-import contools.process_matrix as pm
-import contools.cascade_analysis as casc
-import contools.celltype as ct
+from contools.cascade_analysis import Cascade_Analyzer
+from contools.celltype import Celltype, Celltype_Analyzer
 
 class Analyze_Cluster():
 
@@ -24,7 +23,7 @@ class Analyze_Cluster():
         # determine where neurons are in the signal from sensory -> descending neurons
         # determined using iterative random walks
         self.cluster_order, self.cluster_df = self.cluster_order(cluster_lvl = cluster_lvl)
-        self.cluster_cta = ct.Celltype_Analyzer([ct.Celltype(self.cluster_order[i], skids) for i, skids in enumerate(list(self.cluster_df.skids))])
+        self.cluster_cta = Celltype_Analyzer([Celltype(self.cluster_order[i], skids) for i, skids in enumerate(list(self.cluster_df.skids))])
 
     def cluster_order(self, cluster_lvl):
 
@@ -48,7 +47,7 @@ class Analyze_Cluster():
         source_names = list(self.cluster_df.cluster)
         stop_skids = []
         simultaneous = True
-        hit_hists_list = casc.Cascade_Analyzer.run_cascades_parallel(source_skids_list = skids_list, source_names = source_names, stop_skids=stop_skids,
+        hit_hists_list = Cascade_Analyzer.run_cascades_parallel(source_skids_list = skids_list, source_names = source_names, stop_skids=stop_skids,
                                                                     adj=adj, p=p, max_hops=max_hops, n_init=n_init, simultaneous=simultaneous)
         return(hit_hists_list)
         
