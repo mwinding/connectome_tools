@@ -319,35 +319,6 @@ class Analyze_Nx_G():
 
 
 class Prograph():
-    @staticmethod
-    def crossing_counts_old(G, source_list, targets, cutoff, plot=False, source_name=[], target_name=[], save_path = []):
-
-        targets = np.intersect1d(targets, G.nodes)
-        source_list = np.intersect1d(source_list, G.nodes)
-
-        all_paths = [nx.all_simple_paths(G, source, targets, cutoff=cutoff) for source in source_list]
-        paths_list = [x for sublist in all_paths for x in sublist]
-        paths_crossing_count = [sum(Prograph.path_edge_attributes(G, path, 'edge_type', False)=='contralateral') for path in paths_list]
-        if(plot):
-            # allows text to be editable in Illustrator
-            plt.rcParams['pdf.fonttype'] = 42
-            plt.rcParams['ps.fonttype'] = 42
-
-            # font settings
-            plt.rcParams['font.size'] = 5
-            plt.rcParams['font.family'] = 'arial'
-
-            binwidth = 1
-            x_range = list(range(0, 7))
-            data = paths_crossing_count
-            bins = np.arange(min(data), max(data) + binwidth + 0.5) - 0.5
-
-            fig,ax = plt.subplots(1,1, figsize=(1.5, 2))
-            sns.distplot(paths_crossing_count, bins=bins, kde=False, ax=ax, hist_kws={"rwidth":0.9,'alpha':0.75})
-            ax.set(xlim = (-0.75, 6.75), ylabel=f'Number of Paths ({source_name} to {target_name})', xlabel='Number of Interhemisphere Crossings', xticks=[i for i in range(7)])
-            plt.savefig(f'{save_path}/{source_name}-to-{target_name}_distribution.pdf', format='pdf', bbox_inches='tight')
-
-        return(paths_list, paths_crossing_count)
     
     @staticmethod
     def generate_save_simple_paths(G, source_list, targets, cutoff, save_path):
@@ -467,49 +438,4 @@ class Prograph():
             edges_list.append(edges_iter)
 
         return(edges_list)
-
-    # randomly excise left or right side ipsi edges and contra edges; generate graphs
-    @staticmethod
-    def excise_ipsi_contra_edge_experiment(edges, edge_count, n_init, seed, left, right, exclude_nodes=[], split_pairs=False):
-        # preparing edge lists
-        excised_random_ipsi_left_edges_list = Prograph.random_excise_edges_type(edges, 'ipsilateral', edge_count, n_init, seed, split_pairs=True, exclude_nodes=(exclude_nodes+right))
-        excised_random_ipsi_right_edges_list = Prograph.random_excise_edges_type(edges, 'ipsilateral', edge_count, n_init, seed, split_pairs=True, exclude_nodes=(exclude_nodes+left))
-        excised_random_contra_edges_list = Prograph.random_excise_edges_type(edges, 'contralateral', edge_count, n_init, seed, split_pairs=True, exclude_nodes=exclude_nodes)
-
-        # loading into graphs
-        random_ipsi_left_graphs = Parallel(n_jobs=-1)(delayed(Analyze_Nx_G)(excised_random_ipsi_left_edges_list[i], graph_type='directed', split_pairs=split_pairs) for i in tqdm(range(len(excised_random_ipsi_left_edges_list))))
-        random_ipsi_right_graphs = Parallel(n_jobs=-1)(delayed(Analyze_Nx_G)(excised_random_ipsi_right_edges_list[i], graph_type='directed', split_pairs=split_pairs) for i in tqdm(range(len(excised_random_ipsi_right_edges_list))))
-        random_contra_graphs = Parallel(n_jobs=-1)(delayed(Analyze_Nx_G)(excised_random_contra_edges_list[i], graph_type='directed', split_pairs=split_pairs) for i in tqdm(range(len(excised_random_contra_edges_list))))
-
-        return(random_ipsi_left_graphs, random_ipsi_right_graphs, random_contra_graphs)
-
-    # randomly excise ipsi vs contra edges and generate graphs
-    @staticmethod
-    def excise_ipsi_contra_edge_experiment_whole_brain(edges, edge_count, n_init, seed, exclude_nodes=[], split_pairs=False):
-        # preparing edge lists
-        excised_random_ipsi_edges_list = Prograph.random_excise_edges_type(edges, 'ipsilateral', edge_count, n_init, seed, split_pairs=True, exclude_nodes=exclude_nodes)
-        excised_random_contra_edges_list = Prograph.random_excise_edges_type(edges, 'contralateral', edge_count, n_init, seed, split_pairs=True, exclude_nodes=exclude_nodes)
-
-        # loading into graphs
-        random_ipsi_graphs = Parallel(n_jobs=-1)(delayed(Analyze_Nx_G)(excised_random_ipsi_edges_list[i], graph_type='directed', split_pairs=split_pairs) for i in tqdm(range(len(excised_random_ipsi_edges_list))))
-        random_contra_graphs = Parallel(n_jobs=-1)(delayed(Analyze_Nx_G)(excised_random_contra_edges_list[i], graph_type='directed', split_pairs=split_pairs) for i in tqdm(range(len(excised_random_contra_edges_list))))
-
-        return(random_ipsi_graphs, random_contra_graphs)
-
-    @staticmethod
-    def self_loop_experiment(analyze_graph, ipsi_pair_ids, bilateral_pair_ids, contra_pair_ids, sens, cutoff):
-        
-        ipsi_pair_ids = np.setdiff1d(ipsi_pair_ids, sens)
-        bilateral_pair_ids = np.setdiff1d(bilateral_pair_ids, sens)
-        contra_pair_ids = np.setdiff1d(contra_pair_ids, sens)
-
-        ipsi_pair_ids = list(np.intersect1d(ipsi_pair_ids, analyze_graph.G.nodes))
-        bilateral_pair_ids = list(np.intersect1d(bilateral_pair_ids, analyze_graph.G.nodes))
-        contra_pair_ids = list(np.intersect1d(contra_pair_ids, analyze_graph.G.nodes))
-
-        ipsi_loops = analyze_graph.identify_loops(ipsi_pair_ids, cutoff)
-        bilateral_loops = analyze_graph.identify_loops(bilateral_pair_ids, cutoff)
-        contra_loops = analyze_graph.identify_loops(contra_pair_ids, cutoff)
-
-        return(ipsi_loops, bilateral_loops, contra_loops)
 
