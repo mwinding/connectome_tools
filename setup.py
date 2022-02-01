@@ -2,5 +2,5 @@ from setuptools import setup, find_packages
 
 setup(name='contools',
       version='0.1',
-      packages=find_packages(include=['contools'])
+      packages=find_packages(include=['contools', 'contools.*'])
       )
