@@ -13,7 +13,7 @@ import process_matrix as pm
 from upsetplot import plot
 from upsetplot import from_contents
 from upsetplot import from_memberships
-import cluster_analysis as clust
+import contools.cluster_analysis as clust
 import navis
 
 class Celltype:

@@ -1,13 +1,10 @@
 # object for analysing hit_histograms from cascades run using TraverseDispatcher
 import numpy as np
 import pandas as pd
-import process_matrix as pm
+import contools.process_matrix as pm
 
-import sys
-sys.path.append('/Users/mwinding/repos/maggot_models')
-from src.traverse import Cascade, to_transmission_matrix
-from src.traverse import TraverseDispatcher
-from src.visualization import matrixplot
+from contools.traverse import Cascade, to_transmission_matrix
+from contools.traverse import TraverseDispatcher
 from joblib import Parallel, delayed
 from tqdm import tqdm
 
