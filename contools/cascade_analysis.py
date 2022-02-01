@@ -5,6 +5,8 @@ from contools.process_matrix import Promat
 
 #from contools.traverse import Cascade, to_transmission_matrix
 #from contools.traverse import TraverseDispatcher
+from .traverse.cascade import Cascade, to_transmission_matrix
+from traverse.traverse import TraverseDispatcher
 from joblib import Parallel, delayed
 from tqdm import tqdm
 
