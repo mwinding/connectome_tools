@@ -8,7 +8,7 @@ import pymaid
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 import itertools
-import process_matrix as pm
+import contools.process_matrix as pm
 
 from upsetplot import plot
 from upsetplot import from_contents
