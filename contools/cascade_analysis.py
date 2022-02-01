@@ -1,7 +1,7 @@
 # object for analysing hit_histograms from cascades run using TraverseDispatcher
 import numpy as np
 import pandas as pd
-import process_matrix as pm
+import contools.process_matrix as pm
 
 import sys
 sys.path.append('/Users/mwinding/repos/maggot_models')
