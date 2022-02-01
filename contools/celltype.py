@@ -8,12 +8,12 @@ import pymaid
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 import itertools
-import connectome_tools.process_matrix as pm
+import process_matrix as pm
 
 from upsetplot import plot
 from upsetplot import from_contents
 from upsetplot import from_memberships
-import connectome_tools.cluster_analysis as clust
+import cluster_analysis as clust
 import navis
 
 class Celltype:
