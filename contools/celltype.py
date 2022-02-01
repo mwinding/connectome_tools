@@ -48,7 +48,8 @@ class Celltype:
             plt.bar(ind, memberships.iloc[i], bottom = bottom, color=celltype_colors[i])
             bottom = bottom + memberships.iloc[i]
 
-    def identify_LNs(self, threshold, summed_adj, adj_aa, input_skids, outputs, exclude, pairs = pm.Promat.get_pairs(), sort = True):
+    def identify_LNs(self, threshold, summed_adj, adj_aa, input_skids, outputs, exclude, pairs_path, sort = True):
+        pairs = pm.Promat.get_pairs(pairs_path)
         mat = summed_adj.loc[np.intersect1d(summed_adj.index, self.skids), np.intersect1d(summed_adj.index, self.skids)]
         mat = mat.sum(axis=1)
 
@@ -79,8 +80,8 @@ class Celltype:
         LNs = list(np.setdiff1d(LNs, exclude)) # don't count neurons flagged as excludes: for example, MBONs/MBINs/RGNs probably shouldn't be LNs
         return(LNs, skid_percent_output)
     
-    def identify_in_out_LNs(self, threshold, summed_adj, outputs, inputs, exclude, pairs = pm.Promat.get_pairs(), sort = True):
-
+    def identify_in_out_LNs(self, threshold, summed_adj, outputs, inputs, exclude, pairs_path, sort = True):
+        pairs = pm.Promat.get_pairs(pairs_path)
         mat_output = summed_adj.loc[:, np.intersect1d(summed_adj.index, self.skids)]
         mat_output = mat_output.sum(axis=1)
         mat_input = summed_adj.loc[np.intersect1d(summed_adj.index, self.skids), :]
@@ -623,9 +624,9 @@ def chromosome_plot(df, path, celltypes, plot_type='raw_norm', simple=False, spa
         upstream_ct.plot_memberships(path=path + '-upstream.pdf', figsize=(col_width*len(upstream_ct.Celltypes),col_height), ylim=(0,1))
         downstream_ct.plot_memberships(path=path + '-downstream.pdf', figsize=(col_width*len(downstream_ct.Celltypes),col_height), ylim=(0,1))
 
-def plot_celltype(path, pairids, n_rows, n_cols, celltypes, plot_pairs=True, connectors=False, cn_size=0.25, color=None, names=False, plot_padding=[0,0]):
+def plot_celltype(path, pairids, n_rows, n_cols, celltypes, pairs_path, plot_pairs=True, connectors=False, cn_size=0.25, color=None, names=False, plot_padding=[0,0]):
 
-    pairs = pm.Promat.get_pairs()
+    pairs = pm.Promat.get_pairs(pairs_path)
     # pull specific cell type identities
     celltype_ct = [Celltype(f'{pairid}-ipsi-bi', pm.Promat.get_paired_skids(pairid, pairs)) for pairid in pairids]
     celltype_ct = Celltype_Analyzer(celltype_ct)

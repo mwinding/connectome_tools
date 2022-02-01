@@ -9,7 +9,7 @@ from joblib import Parallel, delayed
 from tqdm import tqdm
 
 class Cascade_Analyzer:
-    def __init__(self, name, hit_hist, n_init, skids_in_hit_hist=True, adj_index=None): # changed mg to adj_index for custom/modified adj matrices
+    def __init__(self, name, hit_hist, n_init, pairs_path, skids_in_hit_hist=True, adj_index=None): # changed mg to adj_index for custom/modified adj matrices
         self.hit_hist = hit_hist
         self.name = name
         self.n_init = n_init
@@ -20,7 +20,7 @@ class Cascade_Analyzer:
             self.adj_index = adj_index
             self.skid_hit_hist = pd.DataFrame(hit_hist, index = self.adj_index) # convert indices to skids
 
-        self.pairs = pm.Promat.get_pairs()
+        self.pairs = pm.Promat.get_pairs(pairs_path)
 
     def get_hit_hist(self):
         return(self.hit_hist)

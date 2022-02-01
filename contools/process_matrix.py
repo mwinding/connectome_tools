@@ -12,9 +12,9 @@ from joblib import Parallel, delayed
 
 class Adjacency_matrix():
 
-    def __init__(self, adj, input_counts, mat_type):
+    def __init__(self, adj, input_counts, mat_type, pairs_path):
         self.skids = list(adj.index)
-        self.pairs = Promat.get_pairs()
+        self.pairs = Promat.get_pairs(pairs_path)
         self.input_counts = input_counts
         self.mat_type = mat_type # 'ad', 'aa', 'dd', 'da', 'summed'
         self.adj = pd.DataFrame(adj, index = self.skids, columns = self.skids)
@@ -521,7 +521,7 @@ class Promat():
 
     # default method to import pair list and process it to deal with duplicated neurons
     @staticmethod
-    def get_pairs(pairs_path='data/pairs/pairs-2021-04-06.csv', flip_weirdos=True):
+    def get_pairs(pairs_path, flip_weirdos=True): # pairs_path was: 'data/pairs/pairs-2021-04-06.csv'
         print(f'Path to pairs list is: {pairs_path}')
 
         pairs = pd.read_csv(pairs_path, header = 0) # import pairs, manually determined with help from Heather Patsolic and Ben Pedigo's scripts
@@ -574,10 +574,10 @@ class Promat():
     #   'pair_status': pairs / nonpaired
     #   'pair_id': left skid of a pair or simply the skid of a nonpaired neuron
     @staticmethod
-    def convert_df_to_pairwise(df, pairs=None):
+    def convert_df_to_pairwise(df, pairs_path, pairs=None):
 
         if(pairs==None):
-            pairs = Promat.get_pairs()
+            pairs = Promat.get_pairs(pairs_path)
         brain_pairs, brain_unpaired, brain_nonpaired = Promat.extract_pairs_from_list(df.index, pairList = pairs)
             
         # left_right interlaced order for brain matrix
@@ -936,8 +936,8 @@ class Promat():
 
     # use paired edgelist [e.g. ad_edges = pd.read_csv('data/edges_threshold/ad_all-paired-edges.csv', index_col=0)]
     @staticmethod
-    def find_all_partners(pairids, edgelist, all_paired_skids=True):
-        pairs = Promat.get_pairs()
+    def find_all_partners(pairids, edgelist, pairs_path, all_paired_skids=True):
+        pairs = Promat.get_pairs(pairs_path)
         data = []
         for pairid in pairids:
             if(pairid in list(edgelist.upstream_pair_id)): # make sure pairid has downstream partners (TRUE if it is in upstream_pair_id list); if not, manually set empty list
@@ -961,8 +961,8 @@ class Promat():
         return(df)
 
     @staticmethod
-    def find_all_partners_hemispheres(pairids, edgelist, all_paired_skids=True):
-        pairs = Promat.get_pairs()
+    def find_all_partners_hemispheres(pairids, edgelist, pairs_path, all_paired_skids=True):
+        pairs = Promat.get_pairs(pairs_path)
         data = []
         for pairid in pairids:
             # identify downstream partners
