@@ -7,9 +7,9 @@ import pymaid as pymaid
 from pymaid_creds import url, name, password, token
 rm = pymaid.CatmaidInstance(url, token, name, password)
 
-import process_matrix as pm
-import cascade_analysis as casc
-import celltype as ct
+import contools.process_matrix as pm
+import contools.cascade_analysis as casc
+import contools.celltype as ct
 
 class Analyze_Cluster():
 
