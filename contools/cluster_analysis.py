@@ -4,8 +4,8 @@ import numpy as np
 import pandas as pd
 import sys
 import pymaid as pymaid
-from pymaid_creds import url, name, password, token
-rm = pymaid.CatmaidInstance(url, token, name, password)
+#from pymaid_creds import url, name, password, token
+#rm = pymaid.CatmaidInstance(url, token, name, password)
 
 import contools.process_matrix as pm
 import contools.cascade_analysis as casc
