@@ -11,11 +11,12 @@ import contools.process_matrix as pm
 import contools.cascade_analysis as casc
 import contools.celltype as ct
 
-class Analyze_Cluster(skids):
+class Analyze_Cluster():
 
     # cluster_lvl should be integer between 0 and max levels of cluster hierarchy
     # meta_data_path is the path to a meta_data file in 'data/graphs/'; contains cluster and sort information
-    def __init__(self, cluster_lvl, meta_data_path = 'data/graphs/meta_data.csv', skids = skids): # default is skids = pymaid.get_skids_by_annotation('mw brain paper clustered neurons')
+    def __init__(self, cluster_lvl, meta_data_path, skids): # default is    skids = pymaid.get_skids_by_annotation('mw brain paper clustered neurons')
+                                                            #               meta_data_path = 'data/graphs/meta_data.csv'
 
         self.meta_data = pd.read_csv(meta_data_path, index_col = 0, header = 0) # load meta_data file
         self.skids = skids
