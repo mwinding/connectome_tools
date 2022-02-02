@@ -115,7 +115,7 @@ class Cascade_Analyzer:
             Cascade,
             transition_probs,
             stop_nodes = stop_indices,
-            max_hops=max_hops,
+            max_hops=max_hops+1, # +1 because max_hops includes hop 0
             allow_loops = False,
             n_init=n_init,
             simultaneous=simultaneous,
@@ -136,7 +136,7 @@ class Cascade_Analyzer:
             Cascade,
             transition_probs,
             stop_nodes = stop_indices,
-            max_hops=max_hops,
+            max_hops=max_hops+1, # +1 because max_hops includes hop 0
             allow_loops = False,
             n_init=n_init,
             simultaneous=simultaneous,
