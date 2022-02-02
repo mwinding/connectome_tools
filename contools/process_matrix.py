@@ -848,21 +848,13 @@ class Promat():
         return()
 
     @staticmethod
-    def pull_adj(type_adj, subgraph):
+    def pull_adj(type_adj, subgraph=0): #subgraph is annot string or list of annotations for neurons to be included in the adj
 
         adj = pd.read_csv(f'data/adj/all-neurons_{type_adj}.csv', index_col = 0).rename(columns=int)
         
-        if(subgraph=='brain'):
-            brain = pymaid.get_skids_by_annotation('mw brain paper clustered neurons')
+        if((type(subgraph)==str) | (type(subgraph)==list)):
+            brain = pymaid.get_skids_by_annotation(subgraph)
             adj = adj.loc[np.intersect1d(adj.index, brain), np.intersect1d(adj.index, brain)]
-
-        if(subgraph=='brain and accessory'):
-            brain = pymaid.get_skids_by_annotation('mw brain paper clustered neurons') + pymaid.get_skids_by_annotation('mw brain accessory neurons')
-            adj = adj.loc[np.intersect1d(adj.index, brain), np.intersect1d(adj.index, brain)]
-
-        #if(subgraph=='brain-A1'):
-
-        #if(subgraph=='A1'):
 
         return(adj)
 
