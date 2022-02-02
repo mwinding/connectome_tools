@@ -8,5 +8,7 @@ setup(name='contools',
       author_email='mwinding@alumni.nd.edu',
       license='MIT',
       packages=find_packages(include=['contools', 'contools.*'],
-      install_requires=['tables', 'python-catmaid', 'graspy'])
+      requires=['tables', 'python-catmaid', 'graspy'])
       )
+
+
