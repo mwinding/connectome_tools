@@ -80,7 +80,7 @@ def _standard_split(n, treenode_info, splits):
     _append_labeled_nodes(treenode_info, dend_treenodes, "dendrite")
 
 
-def _special_mbon_split(n, treenode_info):
+def _special_mbon_split(n, treenode_info, output_path):
     skid = int(n.skeleton_id)
     axon_starts = list(
         pymaid.find_nodes(tags="mw axon start", skeleton_ids=skid)["node_id"]
@@ -143,14 +143,14 @@ def _special_mbon_split(n, treenode_info):
     )
 
 
-def get_treenode_types(nl, splits, special_ids):
+def get_treenode_types(nl, splits, special_ids, output_path):
     treenode_info = []
     print("Cutting neurons...")
     for i, n in enumerate(nl):
         skid = int(n.skeleton_id)
 
         if skid in special_ids:
-            _special_mbon_split(n, treenode_info)
+            _special_mbon_split(n, treenode_info, output_path)
         elif skid in splits.index:
             _standard_split(n, treenode_info, splits)
         else:  # unsplittable neuron
@@ -211,6 +211,8 @@ def flatten_muligraph(multigraph, meta_data_dict):
 
 
 def run(all_neurons, split_tag, special_split_tags, not_split_skids, pairs_path=0):
+    # user must login to CATMAID instance before starting
+
     t0 = time.time()
 
     # find today's date and make an output folder with that name
@@ -220,26 +222,6 @@ def run(all_neurons, split_tag, special_split_tags, not_split_skids, pairs_path=
     output_path = Path(f"data/processed/{today}")
     if not os.path.isdir(output_path):
         os.mkdir(output_path)
-        
-    '''
-    # pull login credentials from user
-    url = pymaid_creds[0]
-    name = pymaid_creds[1]
-    password = pymaid_creds[2]
-    token = pymaid_creds[3]
-    
-    # load user-defined project_id on CATMAID server
-    if(len(pymaid_creds)==5):
-        project_id = pymaid_creds[4]
-        rm = pymaid.CatmaidInstance(url, token, name, password, project_id=project_id)
-
-    # if no project_id provided, use default (1)
-    if(len(pymaid_creds)==4):
-        rm = pymaid.CatmaidInstance(url, token, name, password)
-
-    if((len(pymaid_creds)!=5) & (len(pymaid_creds)!=4)):
-        print('pymaid_creds should include [url, name, password, token] or [url, name, password, token, project_id]')
-    '''
 
     print("Pulling neurons...\n")
 
@@ -343,7 +325,7 @@ def run(all_neurons, split_tag, special_split_tags, not_split_skids, pairs_path=
 
     print("Getting treenode compartment types...")
     currtime = time.time()
-    treenode_types = get_treenode_types(nl, splits, special_ids)
+    treenode_types = get_treenode_types(nl, splits, special_ids, output_path)
     print(f"{time.time() - currtime:.3f} elapsed.\n")
 
 
