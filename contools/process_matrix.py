@@ -655,21 +655,22 @@ class Promat():
     @staticmethod
     def extract_pairs_from_list(skids, pairList):
 
-        pairs = pd.DataFrame([], columns = ['leftid', 'rightid'])
-        unpaired = pd.DataFrame([], columns = ['unpaired'])
-        nonpaired = pd.DataFrame([], columns = ['nonpaired'])
+        pairs = []
+        unpaired = []
+        nonpaired = []
         for i in skids:
             if((int(i) not in pairList.leftid.values) & (int(i) not in pairList.rightid.values)):
-                nonpaired = nonpaired.append({'nonpaired': int(i)}, ignore_index=True)
+                nonpaired.append({'nonpaired': int(i)})
                 continue
 
             if((int(i) in pairList["leftid"].values) & (Promat.get_paired_skids(int(i), pairList)[1] in skids)):
                 pair = Promat.get_paired_skids(int(i), pairList)
-                pairs = pairs.append({'leftid': pair[0], 'rightid': pair[1]}, ignore_index=True)
+                pairs.append({'leftid': pair[0], 'rightid': pair[1]})
 
             if(((int(i) in pairList["leftid"].values) & (Promat.get_paired_skids(int(i), pairList)[1] not in skids)|
                 (int(i) in pairList["rightid"].values) & (Promat.get_paired_skids(int(i), pairList)[0] not in skids))):
-                unpaired = unpaired.append({'unpaired': int(i)}, ignore_index=True)
+                unpaired.append({'unpaired': int(i)})
+
 
         pairs = pd.DataFrame(pairs)
         unpaired = pd.DataFrame(unpaired)
