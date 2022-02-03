@@ -268,7 +268,7 @@ class Adjacency_matrix():
 
         all_edges = []
         for edge in edges:
-            print(edge)
+
             specific_edges = adj.loc[(slice(None), edge[0]), (slice(None), edge[1])]
 
             us_pair_status = adj.loc[(slice(None), slice(None), edge[0]), :].index[0][0]
