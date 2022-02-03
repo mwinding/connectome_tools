@@ -552,9 +552,9 @@ class Promat():
         return(pairs)
 
     # returns all skids in left or right side of the brain, depending on whether side = 'left' or 'right'
-    def get_hemis(side=None, flip_weirdos=True):
-        left = pymaid.get_skids_by_annotation('mw left')
-        right = pymaid.get_skids_by_annotation('mw right')
+    def get_hemis(left_annot, right_annot, side=None, flip_weirdos=True):
+        left = pymaid.get_skids_by_annotation(left_annot)
+        right = pymaid.get_skids_by_annotation(right_annot)
 
         if(flip_weirdos):
             # identifying contra-contra neurons so they can be flipped to opposite side of brain
