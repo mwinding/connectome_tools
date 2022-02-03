@@ -12,9 +12,9 @@ from joblib import Parallel, delayed
 
 class Adjacency_matrix():
 
-    def __init__(self, adj, input_counts, mat_type, pairs_path):
+    def __init__(self, adj, input_counts, mat_type, pairs):
         self.skids = list(adj.index)
-        self.pairs = Promat.get_pairs(pairs_path)
+        self.pairs = pairs
         self.input_counts = input_counts
         self.mat_type = mat_type # 'ad', 'aa', 'dd', 'da', 'summed'
         self.adj = pd.DataFrame(adj, index = self.skids, columns = self.skids)

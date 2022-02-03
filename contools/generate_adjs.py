@@ -517,7 +517,7 @@ def adj_split_axons_dendrites(all_neurons, split_tag, special_split_tags, not_sp
 
     sys.stdout.close()
 
-def edge_thresholds(path, threshold, left_annot, right_annot, pairs_path, date = date.strftime(date.today(), '%Y-%m-%d') ): # default assumes data is from today
+def edge_thresholds(path, threshold, left_annot, right_annot, pairs, date = date.strftime(date.today(), '%Y-%m-%d') ): # default assumes data is from today
 # threshold units are in %input on dendrite or axon
 
     adj_all = pd.read_csv(f'{path}/all-all_{date}.csv', index_col = 0).rename(columns=int)
@@ -529,11 +529,11 @@ def edge_thresholds(path, threshold, left_annot, right_annot, pairs_path, date =
     inputs = pd.read_csv(f'{path}/inputs_{date}.csv', index_col = 0)
 
     # initialize adj matrices
-    adj_all_mat = Adjacency_matrix(adj_all, inputs, 'summed', pairs_path=pairs_path)
-    adj_ad_mat = Adjacency_matrix(adj_ad, inputs, 'ad', pairs_path=pairs_path)
-    adj_aa_mat = Adjacency_matrix(adj_aa, inputs, 'aa', pairs_path=pairs_path)
-    adj_dd_mat = Adjacency_matrix(adj_dd, inputs, 'dd', pairs_path=pairs_path)
-    adj_da_mat = Adjacency_matrix(adj_da, inputs, 'da', pairs_path=pairs_path)
+    adj_all_mat = Adjacency_matrix(adj_all, inputs, 'summed', pairs=pairs)
+    adj_ad_mat = Adjacency_matrix(adj_ad, inputs, 'ad', pairs=pairs)
+    adj_aa_mat = Adjacency_matrix(adj_aa, inputs, 'aa', pairs=pairs)
+    adj_dd_mat = Adjacency_matrix(adj_dd, inputs, 'dd', pairs=pairs)
+    adj_da_mat = Adjacency_matrix(adj_da, inputs, 'da', pairs=pairs)
 
     # generate all paired and nonpaired edges from each matrix with threshold
     # export as paired edges between paired neurons (collapse left/right hemispheres, except for nonpaired neurons)
@@ -544,8 +544,6 @@ def edge_thresholds(path, threshold, left_annot, right_annot, pairs_path, date =
 
     left = Promat.get_hemis(left_annot, right_annot, side='left')
     right = Promat.get_hemis(left_annot, right_annot, side='right')
-
-    Promat.get_pairs(pairs_path=pairs_path)
 
     for i, adj_mat in enumerate(adjs):
         matrix_pairs = Promat.extract_pairs_from_list(adj_mat.skids, pairs)
