@@ -2,18 +2,12 @@
 # significant portions below are from Ben Pedigo's script found here: https://github.com/neurodata/maggot_models/blob/052af5d5999b2ae689b9d4a8d398748858acfd3a/data/process_scripts/process_maggot_brain_connectome_2021-05-24.py
 # parts of this script have been modified to make it more general
 
-# possible inputs:
-# 1. annotations for all neurons
-# 2. annotations for unsplittable neurons
-# 3. annotations for special neurons
-# 4. annotations for neurons to ignore
-# 5. axon-dendrite split tag
-# 6. special axon-dendrite split tag
 import json
 import os
 import pprint
 import sys
 import time
+from datetime import date
 from collections import defaultdict
 from datetime import timedelta
 from pathlib import Path
@@ -27,68 +21,8 @@ import pandas as pd
 import pymaid
 from requests.exceptions import ChunkedEncodingError
 
-t0 = time.time()
-
-from pymaid_creds import url, name, password, token
-rm = pymaid.CatmaidInstance(url, token, name, password)
-
-all_neurons = pymaid.get_skids_by_annotation(['mw brain paper clustered neurons', 'mw brain accessory neurons'])
-
-output_name = "2022-02-02"
-output_path = Path(f"data/processed/{output_name}")
-if not os.path.isdir(output_path):
-    os.mkdir(output_path)
-
-
-#%%
-print("Pulling neurons...\n")
-
-ids = all_neurons
-
-batch_size = 20
-max_tries = 10
-n_batches = int(np.floor(len(ids) / batch_size))
-if len(ids) % n_batches > 0:
-    n_batches += 1
-print(f"Batch size: {batch_size}")
-print(f"Number of batches: {n_batches}")
-print(f"Number of neurons: {len(ids)}")
-print(f"Batch product: {n_batches * batch_size}\n")
-
-i = 0
-currtime = time.time()
-nl = pymaid.get_neuron(
-    ids[i * batch_size : (i + 1) * batch_size], with_connectors=False
-)
-print(f"{time.time() - currtime:.3f} seconds elapsed for batch {i}.")
-for i in range(1, n_batches):
-    currtime = time.time()
-    n_tries = 0
-    success = False
-    while not success and n_tries < max_tries:
-        try:
-            nl += pymaid.get_neuron(
-                ids[i * batch_size : (i + 1) * batch_size], with_connectors=False
-            )
-            success = True
-        except ChunkedEncodingError:
-            print(f"Failed pull on batch {i}, trying again...")
-            n_tries += 1
-    print(f"{time.time() - currtime:.3f} seconds elapsed for batch {i}.")
-
-print("\nPulled all neurons.\b")
-
-#%%
-print("\nPickling neurons...")
-currtime = time.time()
-
-with open(output_path / "neurons.pickle", "wb") as f:
-    dump(nl, f)
-print(f"{time.time() - currtime:.3f} seconds elapsed to pickle.")
-
-
-#%%
-
+##########
+# functions
 
 def get_connectors(nl):
     connectors = pymaid.get_connectors(nl)
@@ -111,44 +45,6 @@ def get_connectors(nl):
     connectors = pd.concat((connectors, details), ignore_index=False, axis=1)
     connectors.reset_index(inplace=True)
     return connectors
-
-
-# %%
-# 
-
-print("Pulling split points and special split neuron ids...")
-currtime = time.time()
-
-splits = pymaid.find_nodes(tags="mw axon split")
-splits = splits.set_index("skeleton_id")["node_id"].squeeze()
-
-# find all of the neurons under "mw MBON special-cases"
-# split the neuron based on node-tags "mw axon start" and "mw axon end"
-# axon is anything that is in between "mw axon start" and "mw axon end"
-special_ids = [
-    lst[0]
-    for lst in pymaid.get_annotated("mw MBON special-cases")["skeleton_ids"].values
-]
-
-print(f"{time.time() - currtime:.3f} elapsed.\n")
-
-# any neuron that is not brain incomplete, unsplittable, or partially differentiated
-# and does not have a split tag should throw an error
-
-# get the neurons that SHOULD have splits
-should_not_split = pymaid.get_skids_by_annotation(['mw unsplittable', 'mw partially differentiated', 'mw brain incomplete'])
-should_split = list(np.setdiff1d(all_neurons, should_not_split))
-
-not_split = list(np.setdiff1d(should_split, list(splits.index) + special_ids))
-
-if len(not_split) > 0:
-    print(
-        f"WARNING: {len(not_split)} neurons should have had split tag and didn't:"
-    )
-    print(not_split)
-
-
-#%%
 
 
 def _append_labeled_nodes(add_list, nodes, name):
@@ -269,89 +165,6 @@ def get_treenode_types(nl, splits, special_ids):
     return treenode_series
 
 
-print("Getting treenode compartment types...")
-currtime = time.time()
-treenode_types = get_treenode_types(nl, splits, special_ids)
-print(f"{time.time() - currtime:.3f} elapsed.\n")
-
-#%%
-print("Pulling connectors...\n")
-currtime = time.time()
-connectors = get_connectors(nl)
-print(f"{time.time() - currtime:.3f} elapsed.\n")
-
-#%%
-explode_cols = ["postsynaptic_to", "postsynaptic_to_node"]
-index_cols = np.setdiff1d(connectors.columns, explode_cols)
-
-print("Exploding connector DataFrame...")
-# explode the lists within the connectors dataframe
-connectors = (
-    connectors.set_index(list(index_cols)).apply(pd.Series.explode).reset_index()
-)
-# TODO figure out these nans
-bad_connectors = connectors[connectors.isnull().any(axis=1)]
-bad_connectors.to_csv(output_path / "bad_connectors.csv")
-# connectors = connectors[~connectors.isnull().any(axis=1)]
-#%%
-print(f"Connectors with errors: {len(bad_connectors)}")
-connectors = connectors.astype(
-    {
-        "presynaptic_to": "Int64",
-        "presynaptic_to_node": "Int64",
-        "postsynaptic_to": "Int64",
-        "postsynaptic_to_node": "Int64",
-    }
-)
-
-#%%
-print("Applying treenode types to connectors...")
-currtime = time.time()
-connectors["presynaptic_type"] = connectors["presynaptic_to_node"].map(treenode_types)
-connectors["postsynaptic_type"] = connectors["postsynaptic_to_node"].map(treenode_types)
-
-connectors["in_subgraph"] = connectors["presynaptic_to"].isin(ids) & connectors[
-    "postsynaptic_to"
-].isin(ids)
-print(f"{time.time() - currtime:.3f} elapsed.\n")
-
-#%%
-### continue here; need meta object maybe
-
-meta = pd.DataFrame(index=all_neurons)
-
-print("Calculating neuron total inputs and outputs...")
-axon_output_map = (
-    connectors[connectors["presynaptic_type"] == "axon"]
-    .groupby("presynaptic_to")
-    .size()
-)
-axon_input_map = (
-    connectors[connectors["postsynaptic_type"] == "axon"]
-    .groupby("postsynaptic_to")
-    .size()
-)
-
-dendrite_output_map = (
-    connectors[connectors["presynaptic_type"].isin(["dendrite", "unsplit"])]
-    .groupby("presynaptic_to")
-    .size()
-)
-dendrite_input_map = (
-    connectors[connectors["postsynaptic_type"].isin(["dendrite", "unsplit"])]
-    .groupby("postsynaptic_to")
-    .size()
-)
-meta["axon_output"] = meta.index.map(axon_output_map).fillna(0.0)
-meta["axon_input"] = meta.index.map(axon_input_map).fillna(0.0)
-meta["dendrite_output"] = meta.index.map(dendrite_output_map).fillna(0.0)
-meta["dendrite_input"] = meta.index.map(dendrite_input_map).fillna(0.0)
-print()
-
-#%%
-# remap the true compartment type mappings to the 4 that we usually use
-
-
 def flatten_compartment_types(synaptic_type):
     if synaptic_type == "axon":
         return "a"
@@ -366,16 +179,6 @@ def flatten(series):
     arr = f(series)
     new_series = pd.Series(data=arr, index=series.index)
     return new_series
-
-
-connectors["compartment_type"] = flatten(connectors["presynaptic_type"]) + flatten(
-    connectors["postsynaptic_type"]
-)
-
-
-#%%
-subgraph_connectors = connectors[connectors["in_subgraph"]]
-meta_data_dict = meta.to_dict(orient="index")
 
 
 def connectors_to_nx_multi(connectors, meta_data_dict):
@@ -405,56 +208,271 @@ def flatten_muligraph(multigraph, meta_data_dict):
     return g
 
 
-full_g = connectors_to_nx_multi(subgraph_connectors, meta_data_dict)
+def run(pymaid_creds, all_neurons, split_tag, special_split_tags, not_split_skids):
+    t0 = time.time()
 
-graph_types = ["aa", "ad", "da", "dd"]
-color_multigraphs = {}
-color_flat_graphs = {}
-for graph_type in graph_types:
-    color_subgraph_connectors = subgraph_connectors[
-        subgraph_connectors["compartment_type"] == graph_type
-    ]
-    color_g = connectors_to_nx_multi(color_subgraph_connectors, meta_data_dict)
-    color_multigraphs[graph_type] = color_g
-    flat_color_g = flatten_muligraph(color_g, meta_data_dict)
-    color_flat_graphs[graph_type] = flat_color_g
+    # find today's date and make an output folder with that name
+    today = date.today()
+    today = date.strftime(today, '%Y-%m-%d')
 
-flat_g = flatten_muligraph(full_g, meta_data_dict)
+    output_path = Path(f"data/processed/{today}")
+    if not os.path.isdir(output_path):
+        os.mkdir(output_path)
 
+    # pull login credentials from user
+    url = pymaid_creds[0]
+    name = pymaid_creds[1]
+    password = pymaid_creds[2]
+    token = pymaid_creds[3]
+    
+    # load user-defined project_id on CATMAID server
+    if(len(pymaid_creds)==5):
+        project_id = pymaid_creds[4]
+        rm = pymaid.CatmaidInstance(url, token, name, password, project_id=project_id)
 
-print("Saving metadata as csv...")
-meta.to_csv(output_path / "meta_data.csv")
-meta.to_csv(output_path / "meta_data_unmodified.csv")
+    # if no project_id provided, use default (1)
+    if(len(pymaid_creds)==4):
+        rm = pymaid.CatmaidInstance(url, token, name, password)
 
-print("Saving connectors as csv...")
-connectors.to_csv(output_path / "connectors.csv")
+    if((len(pymaid_creds)!=5) & (len(pymaid_creds)!=4)):
+        print('pymaid_creds should include [url, name, password, token] or [url, name, password, token, project_id]')
 
-print("Saving each flattened color graph as graphml...")
-for graph_type in graph_types:
-    nx.write_graphml(
-        color_flat_graphs[graph_type], output_path / f"G{graph_type}.graphml"
+    print("Pulling neurons...\n")
+
+    ids = all_neurons
+
+    batch_size = 20
+    max_tries = 10
+    n_batches = int(np.floor(len(ids) / batch_size))
+    if len(ids) % n_batches > 0:
+        n_batches += 1
+    print(f"Batch size: {batch_size}")
+    print(f"Number of batches: {n_batches}")
+    print(f"Number of neurons: {len(ids)}")
+    print(f"Batch product: {n_batches * batch_size}\n")
+
+    i = 0
+    currtime = time.time()
+    nl = pymaid.get_neuron(
+        ids[i * batch_size : (i + 1) * batch_size], with_connectors=False
     )
-nx.write_graphml(flat_g, output_path / "G.graphml")
+    print(f"{time.time() - currtime:.3f} seconds elapsed for batch {i}.")
+    for i in range(1, n_batches):
+        currtime = time.time()
+        n_tries = 0
+        success = False
+        while not success and n_tries < max_tries:
+            try:
+                nl += pymaid.get_neuron(
+                    ids[i * batch_size : (i + 1) * batch_size], with_connectors=False
+                )
+                success = True
+            except ChunkedEncodingError:
+                print(f"Failed pull on batch {i}, trying again...")
+                n_tries += 1
+        print(f"{time.time() - currtime:.3f} seconds elapsed for batch {i}.")
+
+    print("\nPulled all neurons.\b")
 
 
-print("Saving each flattened color graph as txt edgelist...")
-for graph_type in graph_types:
-    nx.write_weighted_edgelist(
-        color_flat_graphs[graph_type], output_path / f"G{graph_type}_edgelist.txt"
+    print("\nPickling neurons...")
+    currtime = time.time()
+
+    with open(output_path / "neurons.pickle", "wb") as f:
+        dump(nl, f)
+    print(f"{time.time() - currtime:.3f} seconds elapsed to pickle.")
+
+
+    print("Pulling split points and special split neuron ids...")
+    currtime = time.time()
+
+    ##########
+    # double-check for issues with split tags
+
+    # find neurons and nodes with split tag
+    splits = pymaid.find_nodes(tags=split_tag)
+    splits = splits.set_index("skeleton_id")["node_id"].squeeze()
+
+    # find neurons and nodes with special split start tag
+    special_splits_start = pymaid.find_nodes(tags=special_split_tags[0])
+    special_splits_start = special_splits_start.set_index("skeleton_id")["node_id"].squeeze()
+
+    # find neurons and nodes with special split end tag
+    special_splits_end = pymaid.find_nodes(tags=special_split_tags[1])
+    special_splits_end = special_splits_end.set_index("skeleton_id")["node_id"].squeeze()
+
+    # every skeleton with special split start should also have a special split end
+    special_start_ids = np.unique(special_splits_start.index)
+    special_end_ids = np.unique(special_splits_end.index)
+    intersect = np.intersect1d(special_start_ids, special_end_ids)
+    union = np.union1d(special_start_ids, special_end_ids)
+    if(len(intersect)!=len(union)):
+        print('Not all neurons with complex splits have the proper tags!')
+        sys.exit(f'Check tags in the following skids: {list(np.setdiff1d(union, intersect))}')
+
+
+    # split tag skeletons and special split tag skeletons should be mutually exclusive 
+    split_ids = list(splits.index)
+    special_ids = list(union)
+
+    if(len(np.intersect1d(split_ids, special_ids))!=0):
+        sys.exit(f'Splitting error! Check {problem_skids} which have a combination of {split_tag}, {special_split_tags[0]}, and {special_split_tags[1]} tags')
+
+
+    print(f"{time.time() - currtime:.3f} elapsed.\n")
+
+    # all splittable neurons should have split tags
+    should_not_split = not_split_skids # unsplittable neurons defined by user
+    should_split = list(np.setdiff1d(all_neurons, should_not_split))
+
+    not_split = list(np.setdiff1d(should_split, split_ids + special_ids))
+
+    if len(not_split) > 0:
+        print(
+            f"WARNING: {len(not_split)} neurons should have had split tag(s) and didn't:"
+        )
+        print(not_split)
+        sys.exit('Check the above skeleton IDs')
+
+    ########
+    # processing data
+
+    print("Getting treenode compartment types...")
+    currtime = time.time()
+    treenode_types = get_treenode_types(nl, splits, special_ids)
+    print(f"{time.time() - currtime:.3f} elapsed.\n")
+
+
+    print("Pulling connectors...\n")
+    currtime = time.time()
+    connectors = get_connectors(nl)
+    print(f"{time.time() - currtime:.3f} elapsed.\n")
+
+    explode_cols = ["postsynaptic_to", "postsynaptic_to_node"]
+    index_cols = np.setdiff1d(connectors.columns, explode_cols)
+
+    print("Exploding connector DataFrame...")
+    # explode the lists within the connectors dataframe
+    connectors = (
+        connectors.set_index(list(index_cols)).apply(pd.Series.explode).reset_index()
     )
-nx.write_weighted_edgelist(flat_g, output_path / "G_edgelist.txt")
+    # TODO figure out these nans
+    bad_connectors = connectors[connectors.isnull().any(axis=1)]
+    bad_connectors.to_csv(output_path / "bad_connectors.csv")
+    # connectors = connectors[~connectors.isnull().any(axis=1)]
+
+    print(f"Connectors with errors: {len(bad_connectors)}")
+    connectors = connectors.astype(
+        {
+            "presynaptic_to": "Int64",
+            "presynaptic_to_node": "Int64",
+            "postsynaptic_to": "Int64",
+            "postsynaptic_to_node": "Int64",
+        }
+    )
+
+    print("Applying treenode types to connectors...")
+    currtime = time.time()
+    connectors["presynaptic_type"] = connectors["presynaptic_to_node"].map(treenode_types)
+    connectors["postsynaptic_type"] = connectors["postsynaptic_to_node"].map(treenode_types)
+
+    connectors["in_subgraph"] = connectors["presynaptic_to"].isin(ids) & connectors[
+        "postsynaptic_to"
+    ].isin(ids)
+    print(f"{time.time() - currtime:.3f} elapsed.\n")
 
 
-#%%
-print()
-print()
-print("Done!")
+    meta = pd.DataFrame(index=all_neurons)
 
-elapsed = time.time() - t0
-delta = timedelta(seconds=elapsed)
-print("----")
-print(f"{delta} elapsed for whole script.")
-print("----")
+    print("Calculating neuron total inputs and outputs...")
+    axon_output_map = (
+        connectors[connectors["presynaptic_type"] == "axon"]
+        .groupby("presynaptic_to")
+        .size()
+    )
+    axon_input_map = (
+        connectors[connectors["postsynaptic_type"] == "axon"]
+        .groupby("postsynaptic_to")
+        .size()
+    )
 
-sys.stdout.close()
-# %%
+    dendrite_output_map = (
+        connectors[connectors["presynaptic_type"].isin(["dendrite", "unsplit"])]
+        .groupby("presynaptic_to")
+        .size()
+    )
+    dendrite_input_map = (
+        connectors[connectors["postsynaptic_type"].isin(["dendrite", "unsplit"])]
+        .groupby("postsynaptic_to")
+        .size()
+    )
+    meta["axon_output"] = meta.index.map(axon_output_map).fillna(0.0)
+    meta["axon_input"] = meta.index.map(axon_input_map).fillna(0.0)
+    meta["dendrite_output"] = meta.index.map(dendrite_output_map).fillna(0.0)
+    meta["dendrite_input"] = meta.index.map(dendrite_input_map).fillna(0.0)
+    print()
+
+    # remap the true compartment type mappings to the 4 that we usually use
+
+
+    connectors["compartment_type"] = flatten(connectors["presynaptic_type"]) + flatten(
+        connectors["postsynaptic_type"]
+    )
+
+
+    subgraph_connectors = connectors[connectors["in_subgraph"]]
+    meta_data_dict = meta.to_dict(orient="index")
+
+
+    full_g = connectors_to_nx_multi(subgraph_connectors, meta_data_dict)
+
+    graph_types = ["aa", "ad", "da", "dd"]
+    color_multigraphs = {}
+    color_flat_graphs = {}
+    for graph_type in graph_types:
+        color_subgraph_connectors = subgraph_connectors[
+            subgraph_connectors["compartment_type"] == graph_type
+        ]
+        color_g = connectors_to_nx_multi(color_subgraph_connectors, meta_data_dict)
+        color_multigraphs[graph_type] = color_g
+        flat_color_g = flatten_muligraph(color_g, meta_data_dict)
+        color_flat_graphs[graph_type] = flat_color_g
+
+    flat_g = flatten_muligraph(full_g, meta_data_dict)
+
+    ########
+    # saving data
+    print("Saving metadata as csv...")
+    meta.to_csv(output_path / "meta_data.csv")
+    meta.to_csv(output_path / "meta_data_unmodified.csv")
+
+    print("Saving connectors as csv...")
+    connectors.to_csv(output_path / "connectors.csv")
+
+    print("Saving each flattened color graph as graphml...")
+    for graph_type in graph_types:
+        nx.write_graphml(
+            color_flat_graphs[graph_type], output_path / f"G{graph_type}.graphml"
+        )
+    nx.write_graphml(flat_g, output_path / "G.graphml")
+
+
+    print("Saving each flattened color graph as txt edgelist...")
+    for graph_type in graph_types:
+        nx.write_weighted_edgelist(
+            color_flat_graphs[graph_type], output_path / f"G{graph_type}_edgelist.txt"
+        )
+    nx.write_weighted_edgelist(flat_g, output_path / "G_edgelist.txt")
+
+
+    print()
+    print()
+    print("Done!")
+
+    elapsed = time.time() - t0
+    delta = timedelta(seconds=elapsed)
+    print("----")
+    print(f"{delta} elapsed for whole script.")
+    print("----")
+
+    sys.stdout.close()
