@@ -528,6 +528,8 @@ def edge_thresholds(path, threshold, left_annot, right_annot, pairs_path, date =
     adj_dd = pd.read_csv(f'{path}/dd_{date}.csv', index_col = 0).rename(columns=int)
     adj_da = pd.read_csv(f'{path}/da_{date}.csv', index_col = 0).rename(columns=int)
 
+    inputs = pd.read_csv(f'{path}/inputs_{date}.csv', index_col = 0)
+
     # initialize adj matrices
     adj_all_mat = Adjacency_matrix(adj_all, inputs, 'summed')
     adj_ad_mat = Adjacency_matrix(adj_ad, inputs, 'ad')
