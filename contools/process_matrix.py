@@ -3,7 +3,6 @@
 import pandas as pd
 import numpy as np
 import csv
-from tqdm import tqdm
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pymaid
@@ -397,7 +396,7 @@ class Adjacency_matrix():
         ds_edges, _ = self.edge_threshold(ds_edges, threshold, 'downstream', include_nonpaired=include_nonpaired, left=left, right=right)
         overthres_ds_edges = ds_edges[ds_edges.overthres==True]
         overthres_ds_edges.reset_index(inplace=True)
-        overthres_ds_edges.drop(labels=['index', 'overthres'], axis=1, inplace=True)
+        overthres_ds_edges = overthres_ds_edges.drop(labels=['index', 'overthres'], axis=1)
 
         if(edges_only==False):
             return(overthres_ds_edges, np.unique(overthres_ds_edges.downstream_pair_id))
