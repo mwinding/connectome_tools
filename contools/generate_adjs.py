@@ -210,7 +210,7 @@ def flatten_muligraph(multigraph, meta_data_dict):
     return g
 
 
-def run(all_neurons, split_tag, special_split_tags, not_split_skids, pairs_path=0):
+def adj_split_axons_dendrites(all_neurons, split_tag, special_split_tags, not_split_skids, pairs_path=0):
     # user must login to CATMAID instance before starting
 
     t0 = time.time()
@@ -462,6 +462,8 @@ def run(all_neurons, split_tag, special_split_tags, not_split_skids, pairs_path=
     Gdd = nx.readwrite.graphml.read_graphml(f'data/processed/{today}/Gdd.graphml', node_type=int)
     Gda = nx.readwrite.graphml.read_graphml(f'data/processed/{today}/Gda.graphml', node_type=int)
 
+    print("Generating split adjacency matrices as csv...")
+
     # generate adjacency matrices
     adj_all = pd.DataFrame(nx.adjacency_matrix(G=G, weight = 'weight').todense(), columns = G.nodes, index = G.nodes)
     adj_ad = pd.DataFrame(nx.adjacency_matrix(G=Gad, weight = 'weight').todense(), columns = Gad.nodes, index = Gad.nodes)
@@ -505,37 +507,6 @@ def run(all_neurons, split_tag, special_split_tags, not_split_skids, pairs_path=
     inputs.to_csv(f'data/adj/inputs_{today}.csv')
     outputs.to_csv(f'data/adj/outputs_{today}.csv')
 
-    '''
-    # load adj matrices
-
-    adj_all_mat = Adjacency_matrix(adj_all, inputs, 'summed')
-    adj_ad_mat = Adjacency_matrix(adj_ad, inputs, 'ad')
-    adj_aa_mat = Adjacency_matrix(adj_aa, inputs, 'aa')
-    adj_dd_mat = Adjacency_matrix(adj_dd, inputs, 'dd')
-    adj_da_mat = Adjacency_matrix(adj_da, inputs, 'da')
-
-    # generate all paired and nonpaired edges from each matrix with threshold
-    # export as paired edges between paired neurons (collapse left/right hemispheres, except for nonpaired neurons)
-    # export as normal edge list, but with pair-wise threshold
-
-    adjs = [adj_all_mat, adj_ad_mat, adj_aa_mat, adj_dd_mat, adj_da_mat, adj_allaa_mat, adj_ad_da_mat]
-    adjs_names = ['summed', 'ad', 'aa', 'dd', 'da', 'all-aa', 'ad_da']
-
-    threshold = 0.01
-    left = Promat.get_hemis('left')
-    right = Promat.get_hemis('right')
-
-    for i, adj_mat in enumerate(adjs):
-        matrix_pairs = Promat.extract_pairs_from_list(adj_mat.skids, pairs)
-        matrix_nonpaired = list(np.intersect1d(matrix_pairs[2].nonpaired, left+right)) # ignore unipolar neurons, not in set of brain neurons
-        all_sources = list(matrix_pairs[0].leftid) + matrix_nonpaired
-
-        all_edges_combined = adj_mat.threshold_edge_list(all_sources, matrix_nonpaired, threshold, left, right) # currently generates edge list for all paired -> paired/nonpaired, nonpaired -> paired/nonpaired
-        all_edges_combined.to_csv(f'data/edges_threshold/{adjs_names[i]}_all-paired-edges.csv')
-        all_edges_split = adj_mat.split_paired_edges(all_edges_combined, left, right)
-        all_edges_split.to_csv(f'data/edges_threshold/pairwise-threshold_{adjs_names[i]}_all-edges.csv')
-    '''
-
     print()
     print()
     print("Done!")
@@ -547,3 +518,41 @@ def run(all_neurons, split_tag, special_split_tags, not_split_skids, pairs_path=
     print("----")
 
     sys.stdout.close()
+
+def edge_thresholds(path, threshold, left_annot, right_annot, pairs_path, date = date.strftime(date.today(), '%Y-%m-%d') ): # default assumes data is from today
+# threshold units are in %input on dendrite or axon
+
+    adj_all = pd.read_csv(f'{path}/all-all_{date}.csv', index_col = 0).rename(columns=int)
+    adj_ad = pd.read_csv(f'{path}/ad_{date}.csv', index_col = 0).rename(columns=int)
+    adj_aa = pd.read_csv(f'{path}/aa_{date}.csv', index_col = 0).rename(columns=int)
+    adj_dd = pd.read_csv(f'{path}/dd_{date}.csv', index_col = 0).rename(columns=int)
+    adj_da = pd.read_csv(f'{path}/da_{date}.csv', index_col = 0).rename(columns=int)
+
+    # initialize adj matrices
+    adj_all_mat = Adjacency_matrix(adj_all, inputs, 'summed')
+    adj_ad_mat = Adjacency_matrix(adj_ad, inputs, 'ad')
+    adj_aa_mat = Adjacency_matrix(adj_aa, inputs, 'aa')
+    adj_dd_mat = Adjacency_matrix(adj_dd, inputs, 'dd')
+    adj_da_mat = Adjacency_matrix(adj_da, inputs, 'da')
+
+    # generate all paired and nonpaired edges from each matrix with threshold
+    # export as paired edges between paired neurons (collapse left/right hemispheres, except for nonpaired neurons)
+    # export as normal edge list, but with pair-wise threshold
+
+    adjs = [adj_all_mat, adj_ad_mat, adj_aa_mat, adj_dd_mat, adj_da_mat]
+    adjs_names = ['summed', 'ad', 'aa', 'dd', 'da']
+
+    left = Promat.get_hemis(left_annot, right_annot, side='left')
+    right = Promat.get_hemis(left_annot, right_annot, side='right')
+
+    Promat.get_pairs(pairs_path=pairs_path)
+
+    for i, adj_mat in enumerate(adjs):
+        matrix_pairs = Promat.extract_pairs_from_list(adj_mat.skids, pairs)
+        matrix_nonpaired = list(np.intersect1d(matrix_pairs[2].nonpaired, left+right)) # ignore unipolar neurons, not in set of brain neurons
+        all_sources = list(matrix_pairs[0].leftid) + matrix_nonpaired
+
+        all_edges_combined = adj_mat.threshold_edge_list(all_sources, matrix_nonpaired, threshold, left, right) # currently generates edge list for all paired -> paired/nonpaired, nonpaired -> paired/nonpaired
+        all_edges_combined.to_csv(f'data/edges_threshold/{adjs_names[i]}_all-paired-edges_{today}.csv')
+        all_edges_split = adj_mat.split_paired_edges(all_edges_combined, left, right)
+        all_edges_split.to_csv(f'data/edges_threshold/pairwise-threshold_{adjs_names[i]}_all-edges_{today}.csv')
