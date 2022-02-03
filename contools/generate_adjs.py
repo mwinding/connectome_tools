@@ -551,6 +551,6 @@ def edge_thresholds(path, threshold, left_annot, right_annot, pairs, date = date
         all_sources = list(matrix_pairs[0].leftid) + matrix_nonpaired
 
         all_edges_combined = adj_mat.threshold_edge_list(all_sources, matrix_nonpaired, threshold, left, right) # currently generates edge list for all paired -> paired/nonpaired, nonpaired -> paired/nonpaired
-        all_edges_combined.to_csv(f'data/edges_threshold/{adjs_names[i]}_all-paired-edges_{today}.csv')
+        all_edges_combined.to_csv(f'data/edges_threshold/{adjs_names[i]}_all-paired-edges_{date}.csv')
         all_edges_split = adj_mat.split_paired_edges(all_edges_combined, left, right)
-        all_edges_split.to_csv(f'data/edges_threshold/pairwise-threshold_{adjs_names[i]}_all-edges_{today}.csv')
+        all_edges_split.to_csv(f'data/edges_threshold/pairwise-threshold_{adjs_names[i]}_all-edges_{date}.csv')
