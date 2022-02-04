@@ -517,7 +517,7 @@ def adj_split_axons_dendrites(all_neurons, split_tag, special_split_tags, not_sp
 
     sys.stdout.close()
 
-def edge_thresholds(path, threshold, left_annot, right_annot, pairs, date = date.strftime(date.today(), '%Y-%m-%d') ): # default assumes data is from today
+def edge_thresholds(path, threshold, left_annot, right_annot, pairs, fraction_input=True, date = date.strftime(date.today(), '%Y-%m-%d') ): # default assumes data is from today
 # threshold units are in %input on dendrite or axon
 
     adj_all = pd.read_csv(f'{path}/all-all_{date}.csv', index_col = 0).rename(columns=int)
@@ -529,11 +529,11 @@ def edge_thresholds(path, threshold, left_annot, right_annot, pairs, date = date
     inputs = pd.read_csv(f'{path}/inputs_{date}.csv', index_col = 0)
 
     # initialize adj matrices
-    adj_all_mat = Adjacency_matrix(adj_all, inputs, 'summed', pairs=pairs)
-    adj_ad_mat = Adjacency_matrix(adj_ad, inputs, 'ad', pairs=pairs)
-    adj_aa_mat = Adjacency_matrix(adj_aa, inputs, 'aa', pairs=pairs)
-    adj_dd_mat = Adjacency_matrix(adj_dd, inputs, 'dd', pairs=pairs)
-    adj_da_mat = Adjacency_matrix(adj_da, inputs, 'da', pairs=pairs)
+    adj_all_mat = Adjacency_matrix(adj_all, inputs, 'summed', pairs=pairs, fraction_input=fraction_input)
+    adj_ad_mat = Adjacency_matrix(adj_ad, inputs, 'ad', pairs=pairs, fraction_input=fraction_input)
+    adj_aa_mat = Adjacency_matrix(adj_aa, inputs, 'aa', pairs=pairs, fraction_input=fraction_input)
+    adj_dd_mat = Adjacency_matrix(adj_dd, inputs, 'dd', pairs=pairs, fraction_input=fraction_input)
+    adj_da_mat = Adjacency_matrix(adj_da, inputs, 'da', pairs=pairs, fraction_input=fraction_input)
 
     # generate all paired and nonpaired edges from each matrix with threshold
     # export as paired edges between paired neurons (collapse left/right hemispheres, except for nonpaired neurons)
@@ -551,6 +551,12 @@ def edge_thresholds(path, threshold, left_annot, right_annot, pairs, date = date
         all_sources = list(matrix_pairs[0].leftid) + matrix_nonpaired
 
         all_edges_combined = adj_mat.threshold_edge_list(all_sources, matrix_nonpaired, threshold, left, right) # currently generates edge list for all paired -> paired/nonpaired, nonpaired -> paired/nonpaired
-        all_edges_combined.to_csv(f'data/edges_threshold/{adjs_names[i]}_all-paired-edges_{date}.csv')
         all_edges_split = adj_mat.split_paired_edges(all_edges_combined, left, right)
-        all_edges_split.to_csv(f'data/edges_threshold/pairwise-threshold_{adjs_names[i]}_all-edges_{date}.csv')
+        
+        if(fraction_input==True):
+            all_edges_combined.to_csv(f'data/edges_threshold/{adjs_names[i]}_pairwise-input-threshold-{threshold}_paired-edges_{date}.csv')
+            all_edges_split.to_csv(f'data/edges_threshold/{adjs_names[i]}_pairwise-input-threshold-{threshold}_all-edges_{date}.csv')
+
+        if(fraction_input==False):
+            all_edges_combined.to_csv(f'data/edges_threshold/{adjs_names[i]}_pairwise-threshold-{threshold}syn_paired-edges_{date}.csv')
+            all_edges_split.to_csv(f'data/edges_threshold/{adjs_names[i]}_pairwise-threshold-{threshold}syn_all-edges_{date}.csv')
