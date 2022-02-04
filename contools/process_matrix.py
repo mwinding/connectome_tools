@@ -11,14 +11,23 @@ from joblib import Parallel, delayed
 
 class Adjacency_matrix():
 
-    def __init__(self, adj, input_counts, mat_type, pairs):
+    def __init__(self, adj, input_counts, mat_type, pairs, fraction_input=True):
         self.skids = list(adj.index)
         self.pairs = pairs
         self.input_counts = input_counts
         self.mat_type = mat_type # 'ad', 'aa', 'dd', 'da', 'summed'
         self.adj = pd.DataFrame(adj, index = self.skids, columns = self.skids)
-        self.adj_fract = self.fraction_input_matrix()
-        self.adj_inter = self.interlaced_matrix()
+
+        # convert adj to %input
+        if(fraction_input):
+            self.adj_fract = self.fraction_input_matrix()
+            self.adj_inter = self.interlaced_matrix()
+
+        # leave matrix as raw synapse
+        if(fraction_input==False):
+            self.adj_fract = []
+            self.adj_inter = self.interlaced_matrix(fract=False)
+
         self.adj_pairwise = self.average_pairwise_matrix()
 
     def fraction_input_matrix(self):
