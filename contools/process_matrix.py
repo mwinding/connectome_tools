@@ -399,7 +399,7 @@ class Adjacency_matrix():
         return(all_edges, partner_skids)
 
     # select edges from results of edge_threshold that are over threshold; include non_paired edges as specified by user
-    def select_edges(self, pair_id, threshold, edges_only=False, include_nonpaired=[], exclude_nonpaired=[], left=[], right=[]):
+    def select_edges(self, pair_id, threshold, edges_only=False, include_nonpaired=True, exclude_nonpaired=[], left=[], right=[]):
 
         _, ds, ds_edges = self.downstream(pair_id, threshold)
         ds_edges, _ = self.edge_threshold(ds_edges, threshold, 'downstream', include_nonpaired=include_nonpaired, left=left, right=right)
@@ -413,8 +413,8 @@ class Adjacency_matrix():
             return(overthres_ds_edges)
     
     # generate edge list for whole matrix with some threshold
-    def threshold_edge_list(self, all_sources, matrix_nonpaired, threshold, left, right):
-        all_edges = Parallel(n_jobs=-1)(delayed(self.select_edges)(pair, threshold, edges_only=True, include_nonpaired=matrix_nonpaired, left=left, right=right) for pair in tqdm(all_sources))
+    def threshold_edge_list(self, all_sources, threshold, left, right, include_nonpaired=True):
+        all_edges = Parallel(n_jobs=-1)(delayed(self.select_edges)(pair, threshold, edges_only=True, include_nonpaired=include_nonpaired, left=left, right=right) for pair in tqdm(all_sources))
         all_edges_combined = [x for x in all_edges if type(x)==pd.DataFrame]
         all_edges_combined = pd.concat(all_edges_combined, axis=0)
         all_edges_combined.reset_index(inplace=True, drop=True)
