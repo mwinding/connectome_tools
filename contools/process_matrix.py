@@ -124,7 +124,7 @@ class Adjacency_matrix():
         source_pair_id = np.unique([x[1] for x in self.adj_inter.loc[(slice(None), slice(None), source), :].index])
 
         if(by_group):
-            bin_mat = adj.loc[(slice(None), source_pair_id), :].sum(axis=0) > threshold
+            bin_mat = adj.loc[(slice(None), source_pair_id), :].sum(axis=0) >= threshold
             bin_column = np.where(bin_mat)[0]
             ds_neurons = bin_mat.index[bin_column]
 
@@ -139,7 +139,7 @@ class Adjacency_matrix():
             return(ds_neurons_skids)
 
         if(by_group==False):
-            bin_mat = adj.loc[(slice(None), source_pair_id), :] > threshold
+            bin_mat = adj.loc[(slice(None), source_pair_id), :] >= threshold
             bin_column = np.where(bin_mat.sum(axis = 0) > 0)[0]
             ds_neurons = bin_mat.columns[bin_column]
             bin_row = np.where(bin_mat.sum(axis = 1) > 0)[0]
@@ -188,7 +188,7 @@ class Adjacency_matrix():
 
         source_pair_id = np.unique([x[1] for x in self.adj_inter.loc[(slice(None), slice(None), source), :].index])
 
-        bin_mat = adj.loc[:, (slice(None), source_pair_id)] > threshold
+        bin_mat = adj.loc[:, (slice(None), source_pair_id)] >= threshold
         bin_row = np.where(bin_mat.sum(axis = 1) > 0)[0]
         us_neuron_pair_ids = bin_mat.index[bin_row]
 
@@ -296,13 +296,13 @@ class Adjacency_matrix():
                 if(strict==True):
                     # is each edge weight over threshold?
                     for index in specific_edges.index:
-                        if((specific_edges.loc[index].left>threshold) & (specific_edges.loc[index].right>threshold)):
+                        if((specific_edges.loc[index].left>=threshold) & (specific_edges.loc[index].right>=threshold)):
                             specific_edges.loc[index, 'overthres'] = True
 
                 if(strict==False):
                     # is average edge weight over threshold
                     for index in specific_edges.index:
-                        if(((specific_edges.loc[index].left + specific_edges.loc[index].right)/2) > threshold):
+                        if(((specific_edges.loc[index].left + specific_edges.loc[index].right)/2) >= threshold):
                             specific_edges.loc[index, 'overthres'] = True
 
                 # are both edges present?
@@ -320,19 +320,43 @@ class Adjacency_matrix():
                     specific_edges = pd.DataFrame([[edge[0], edge[1], specific_edges.iloc[0].values[0], 0, False, 'ipsilateral', 'paired', 'nonpaired'],
                                                     [edge[0], edge[1], specific_edges.iloc[1].values[0], 0, False, 'contralateral', 'paired', 'nonpaired']], 
                                                     columns = ['upstream_pair_id', 'downstream_pair_id', 'left', 'right', 'overthres', 'type', 'upstream_status', 'downstream_status'])
+                    
+                    # is edge over threshold? 
+                    # don't check both because one will be missing, strict==True/False doesn't apply for the same reason
+                    for index in specific_edges.index:
+                        if(((specific_edges.loc[index].left + specific_edges.loc[index].right)>=threshold)):
+                            specific_edges.loc[index, 'overthres'] = True
+
 
                 if(edge[1] in right):
                     specific_edges = pd.DataFrame([[edge[0], edge[1], 0, specific_edges.iloc[0].values[0], False, 'contralateral', 'paired', 'nonpaired'],
                                                     [edge[0], edge[1], 0, specific_edges.iloc[1].values[0], False, 'ipsilateral', 'paired', 'nonpaired']], 
                                                     columns = ['upstream_pair_id', 'downstream_pair_id', 'left', 'right', 'overthres', 'type', 'upstream_status', 'downstream_status'])
 
-                # is edge over threshold? 
-                # don't check both because one will be missing
-                # strict==True/False doesn't apply for the same reason
-                for index in specific_edges.index:
-                    if(((specific_edges.loc[index].left + specific_edges.loc[index].right)>threshold)):
-                        specific_edges.loc[index, 'overthres'] = True
-                                
+                    # is edge over threshold? 
+                    # don't check both because one will be missing, strict==True/False doesn't apply for the same reason
+                    for index in specific_edges.index:
+                        if(((specific_edges.loc[index].left + specific_edges.loc[index].right)>=threshold)):
+                            specific_edges.loc[index, 'overthres'] = True
+                            
+                # where nonpaired neuron is center neuron
+                if((edge[1] not in left) & (edge[1] not in right)):
+                    print(f'{edge[1]} not annotated as left or right hemisphere neuron, assumed to be a center neuron')
+                    specific_edges = pd.DataFrame([[edge[0], edge[1], specific_edges.iloc[0].values[0], specific_edges.iloc[1].values[0], False, 'to-center', 'paired', 'nonpaired']], 
+                                                    columns = ['upstream_pair_id', 'downstream_pair_id', 'left', 'right', 'overthres', 'type', 'upstream_status', 'downstream_status'])
+
+                    if(strict==True):
+                        # is each edge weight over threshold?
+                        for index in specific_edges.index:
+                            if((specific_edges.loc[index].left>=threshold) & (specific_edges.loc[index].right>=threshold)):
+                                specific_edges.loc[index, 'overthres'] = True
+
+                    if(strict==False):
+                        # is average edge weight over threshold
+                        for index in specific_edges.index:
+                            if(((specific_edges.loc[index].left + specific_edges.loc[index].right)/2) >= threshold):
+                                specific_edges.loc[index, 'overthres'] = True
+
                 all_edges.append(specific_edges.values[0])
                 all_edges.append(specific_edges.values[1])
 
@@ -345,18 +369,42 @@ class Adjacency_matrix():
                                                     [edge[0], edge[1], 0, specific_edges.iloc[0, 1], False, 'contralateral', 'nonpaired', 'paired']], 
                                                     columns = ['upstream_pair_id', 'downstream_pair_id', 'left', 'right', 'overthres', 'type', 'upstream_status', 'downstream_status'])
 
+                    # is edge over threshold? 
+                    # don't check both because one will be missing, strict==True/False doesn't apply for the same reason
+                    for index in specific_edges.index:
+                        if(((specific_edges.loc[index].left + specific_edges.loc[index].right)>=threshold)):
+                            specific_edges.loc[index, 'overthres'] = True
+
+
                 if(edge[0] in right):
                     specific_edges = pd.DataFrame([[edge[0], edge[1], specific_edges.iloc[0, 0], 0, False, 'contralateral', 'nonpaired', 'paired'],
                                                     [edge[0], edge[1], 0, specific_edges.iloc[0, 1], False, 'ipsilateral', 'nonpaired', 'paired']], 
                                                     columns = ['upstream_pair_id', 'downstream_pair_id', 'left', 'right', 'overthres', 'type', 'upstream_status', 'downstream_status'])
 
-                # is edge over threshold? 
-                # don't check both because one will be missing
-                # strict==True/False doesn't apply for the same reason
-                for index in specific_edges.index:
-                    if(((specific_edges.loc[index].left + specific_edges.loc[index].right)>threshold)):
-                        specific_edges.loc[index, 'overthres'] = True
-                                
+                    # is edge over threshold? 
+                    # don't check both because one will be missing, strict==True/False doesn't apply for the same reason
+                    for index in specific_edges.index:
+                        if(((specific_edges.loc[index].left + specific_edges.loc[index].right)>=threshold)):
+                            specific_edges.loc[index, 'overthres'] = True
+
+                # where nonpaired neuron is a center neuron
+                if((edge[0] not in left) & (edge[0] not in right)):
+                    print(f'{edge[0]} not annotated as left or right hemisphere neuron, assumed to be a center neuron')
+                    specific_edges = pd.DataFrame([[edge[0], edge[1], specific_edges.iloc[0].values[0], specific_edges.iloc[0].values[1], False, 'from-center', 'paired', 'nonpaired']], 
+                                                    columns = ['upstream_pair_id', 'downstream_pair_id', 'left', 'right', 'overthres', 'type', 'upstream_status', 'downstream_status'])
+
+                    if(strict==True):
+                        # is each edge weight over threshold?
+                        for index in specific_edges.index:
+                            if((specific_edges.loc[index].left>=threshold) & (specific_edges.loc[index].right>=threshold)):
+                                specific_edges.loc[index, 'overthres'] = True
+
+                    if(strict==False):
+                        # is average edge weight over threshold
+                        for index in specific_edges.index:
+                            if(((specific_edges.loc[index].left + specific_edges.loc[index].right)/2) >= threshold):
+                                specific_edges.loc[index, 'overthres'] = True
+          
                 all_edges.append(specific_edges.values[0])
                 all_edges.append(specific_edges.values[1])
 
@@ -372,6 +420,11 @@ class Adjacency_matrix():
                         specific_edges = pd.DataFrame([[edge[0], edge[1], edge_weight, 0, False, 'ipsilateral', 'nonpaired', 'nonpaired']], 
                                                     columns = ['upstream_pair_id', 'downstream_pair_id', 'left', 'right', 'overthres', 'type', 'upstream_status', 'downstream_status'])
 
+                    # downstream neuron is a center neuron
+                    if((edge[1] not in left) & (edge[1] not in right)):
+                        specific_edges = pd.DataFrame([[edge[0], edge[1], edge_weight, 0, False, 'to-center', 'nonpaired', 'nonpaired']], 
+                                                    columns = ['upstream_pair_id', 'downstream_pair_id', 'left', 'right', 'overthres', 'type', 'upstream_status', 'downstream_status'])
+
                 if(edge[0] in right):
                     if(edge[1] in left):
                         specific_edges = pd.DataFrame([[edge[0], edge[1], edge_weight, 0, False, 'contralateral', 'nonpaired', 'nonpaired']], 
@@ -379,10 +432,31 @@ class Adjacency_matrix():
                     if(edge[1] in right):
                         specific_edges = pd.DataFrame([[edge[0], edge[1], 0, edge_weight, False, 'ipsilateral', 'nonpaired', 'nonpaired']], 
                                                     columns = ['upstream_pair_id', 'downstream_pair_id', 'left', 'right', 'overthres', 'type', 'upstream_status', 'downstream_status'])
+                    
+                    # downstream neuron is a center neuron
+                    if((edge[1] not in left) & (edge[1] not in right)):
+                        print(f'{edge[1]} not annotated as left or right hemisphere neuron, assumed to be a center neuron')
+                        specific_edges = pd.DataFrame([[edge[0], edge[1], 0, edge_weight, False, 'to-center', 'nonpaired', 'nonpaired']], 
+                                                    columns = ['upstream_pair_id', 'downstream_pair_id', 'left', 'right', 'overthres', 'type', 'upstream_status', 'downstream_status'])
+                
+                # upstream neuron is center neuron
+                if((edge[0] not in left) & (edge[0] not in right)):
+                    print(f'{edge[0]} not annotated as left or right hemisphere neuron, assumed to be a center neuron')
+                    if(edge[1] in left):
+                        specific_edges = pd.DataFrame([[edge[0], edge[1], edge_weight, 0, False, 'from-center', 'nonpaired', 'nonpaired']], 
+                                                    columns = ['upstream_pair_id', 'downstream_pair_id', 'left', 'right', 'overthres', 'type', 'upstream_status', 'downstream_status'])
+                    if(edge[1] in right):
+                        specific_edges = pd.DataFrame([[edge[0], edge[1], 0, edge_weight, False, 'from-center', 'nonpaired', 'nonpaired']], 
+                                                    columns = ['upstream_pair_id', 'downstream_pair_id', 'left', 'right', 'overthres', 'type', 'upstream_status', 'downstream_status'])
+                    
+                    # downstream neuron is center neuron
+                    if((edge[1] not in left) & (edge[1] not in right)):
+                        specific_edges = pd.DataFrame([[edge[0], edge[1], edge_weight, 0, False, 'to-from-center', 'nonpaired', 'nonpaired']], 
+                                                    columns = ['upstream_pair_id', 'downstream_pair_id', 'left', 'right', 'overthres', 'type', 'upstream_status', 'downstream_status'])
+                
 
-                # is edge over threshold? 
-                # only one edge so strict==True/False doesn't apply
-                if(edge_weight>threshold):
+                # is edge over threshold? only one edge so strict==True/False doesn't apply
+                if(edge_weight>=threshold):
                     specific_edges.loc[:, 'overthres'] = True
                                 
                 all_edges.append(specific_edges.values[0])
