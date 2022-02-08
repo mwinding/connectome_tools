@@ -327,6 +327,8 @@ class Adjacency_matrix():
                         if(((specific_edges.loc[index].left + specific_edges.loc[index].right)>=threshold)):
                             specific_edges.loc[index, 'overthres'] = True
 
+                    all_edges.append(specific_edges.values[0])
+                    all_edges.append(specific_edges.values[1])
 
                 if(edge[1] in right):
                     specific_edges = pd.DataFrame([[edge[0], edge[1], 0, specific_edges.iloc[0].values[0], False, 'contralateral', 'paired', 'nonpaired'],
@@ -338,6 +340,9 @@ class Adjacency_matrix():
                     for index in specific_edges.index:
                         if(((specific_edges.loc[index].left + specific_edges.loc[index].right)>=threshold)):
                             specific_edges.loc[index, 'overthres'] = True
+
+                    all_edges.append(specific_edges.values[0])
+                    all_edges.append(specific_edges.values[1])
                             
                 # where nonpaired neuron is center neuron
                 if((edge[1] not in left) & (edge[1] not in right)):
@@ -357,8 +362,7 @@ class Adjacency_matrix():
                             if(((specific_edges.loc[index].left + specific_edges.loc[index].right)/2) >= threshold):
                                 specific_edges.loc[index, 'overthres'] = True
 
-                all_edges.append(specific_edges.values[0])
-                all_edges.append(specific_edges.values[1])
+                    all_edges.append(specific_edges.values[0])
 
 
             # check for edges from upstream nonpaired neurons
@@ -375,6 +379,8 @@ class Adjacency_matrix():
                         if(((specific_edges.loc[index].left + specific_edges.loc[index].right)>=threshold)):
                             specific_edges.loc[index, 'overthres'] = True
 
+                    all_edges.append(specific_edges.values[0])
+                    all_edges.append(specific_edges.values[1])
 
                 if(edge[0] in right):
                     specific_edges = pd.DataFrame([[edge[0], edge[1], specific_edges.iloc[0, 0], 0, False, 'contralateral', 'nonpaired', 'paired'],
@@ -386,6 +392,9 @@ class Adjacency_matrix():
                     for index in specific_edges.index:
                         if(((specific_edges.loc[index].left + specific_edges.loc[index].right)>=threshold)):
                             specific_edges.loc[index, 'overthres'] = True
+
+                    all_edges.append(specific_edges.values[0])
+                    all_edges.append(specific_edges.values[1])
 
                 # where nonpaired neuron is a center neuron
                 if((edge[0] not in left) & (edge[0] not in right)):
@@ -404,10 +413,9 @@ class Adjacency_matrix():
                         for index in specific_edges.index:
                             if(((specific_edges.loc[index].left + specific_edges.loc[index].right)/2) >= threshold):
                                 specific_edges.loc[index, 'overthres'] = True
-          
-                all_edges.append(specific_edges.values[0])
-                all_edges.append(specific_edges.values[1])
 
+                    all_edges.append(specific_edges.values[0])
+          
             # check for edges between two nonpaired neurons
             if((us_pair_status == 'nonpaired') & (ds_pair_status == 'nonpaired') & (include_nonpaired==True)):
 
