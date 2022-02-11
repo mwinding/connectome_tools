@@ -71,9 +71,9 @@ class Celltype:
 
         skid_percent_output = Promat.convert_df_to_pairwise(pd.DataFrame(skid_percent_output, columns=['skid', 'percent_output_intragroup']).set_index('skid'), pairs_path='', pairs=pairs)
 
-        # identify neurons with >=50% output within group (or axoaxonic onto input neurons to group)
-        LNs = skid_percent_output.groupby('pair_id').sum()      
-        LNs = LNs[np.array([x for sublist in (LNs>=threshold*2).values for x in sublist])]
+        # identify neurons with >={threshold}% output within group (or axoaxonic onto input neurons to group)
+        LNs = skid_percent_output.groupby('pair_id').mean()      
+        LNs = LNs[np.array([x for sublist in (LNs>=threshold).values for x in sublist])]
         LNs = list(LNs.index) # identify pair_ids of all neurons pairs/nonpaired over threshold
         LNs = [list(skid_percent_output.loc[(slice(None), skid), :].index) for skid in LNs] # pull all left/right pairs or just nonpaired neurons
         LNs = [x[2] for sublist in LNs for x in sublist]
@@ -106,9 +106,9 @@ class Celltype:
 
         skid_percent_in_out = Promat.convert_df_to_pairwise(pd.DataFrame(skid_percent_in_out, columns=['skid', 'percent_input_from_group', 'percent_output_to_group']).set_index('skid'), pairs_path='', pairs=pairs)
 
-        # identify neurons with >=50% output within group (or axoaxonic onto input neurons to group)
-        LNs = skid_percent_in_out.groupby('pair_id').sum()      
-        LNs = LNs[((LNs>=threshold*2).sum(axis=1)==2).values]
+        # identify neurons with >={threshold}% output within group (or axoaxonic onto input neurons to group)
+        LNs = skid_percent_in_out.groupby('pair_id').mean()      
+        LNs = LNs[((LNs>=threshold).sum(axis=1)==2).values]
         LNs = list(LNs.index) # identify pair_ids of all neurons pairs/nonpaired over threshold
         LNs = [list(skid_percent_in_out.loc[(slice(None), skid), :].index) for skid in LNs] # pull all left/right pairs or just nonpaired neurons
         LNs = [x[2] for sublist in LNs for x in sublist]
