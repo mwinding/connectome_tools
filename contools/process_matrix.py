@@ -767,9 +767,9 @@ class Promat():
                 unpaired.append({'unpaired': int(i)})
 
 
-        pairs = pd.DataFrame(pairs)
-        unpaired = pd.DataFrame(unpaired)
-        nonpaired = pd.DataFrame(nonpaired)
+        pairs = pd.DataFrame(pairs, columns=['leftid', 'rightid'])
+        unpaired = pd.DataFrame(unpaired, columns=['unpaired'])
+        nonpaired = pd.DataFrame(nonpaired, columns=['nonpaired'])
         return(pairs, unpaired, nonpaired)
 
     # loads neurons pairs from selected pymaid annotation
