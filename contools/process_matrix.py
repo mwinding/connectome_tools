@@ -212,14 +212,15 @@ class Adjacency_matrix():
 
         return(us_neurons_skids, edges)
 
-    def downstream_multihop(self, source, threshold, min_members=0, hops=10, exclude=[], strict=False, allow_source_ds=False):
+    # downstream multihop with custom threshold; downstream_multihop is faster but must use a pregenerated edge list
+    def downstream_multihop_thres(self, source, threshold, min_members=0, hops=10, exclude=[], strict=False, allow_source_ds=False):
         if(allow_source_ds==False):
             _, ds, edges = self.downstream(source, threshold, exclude=(source + exclude))
         if(allow_source_ds):
             _, ds, edges = self.downstream(source, threshold, exclude=(exclude))
 
-        left = Promat.get_hemis('left')
-        right = Promat.get_hemis('right')
+        left = Promat.get_hemis(left_annot)
+        right = Promat.get_hemis(right_annot)
 
         _, ds = self.edge_threshold(edges, threshold, direction='downstream', strict=strict, left=left, right=right)
 
@@ -242,13 +243,17 @@ class Adjacency_matrix():
 
         return(layers)
 
-    def upstream_multihop(self, source, threshold, min_members=10, hops=10, exclude=[], strict=False, allow_source_us=False):
+    # upstream multihop with custom threshold; upstream_multihop is faster but must use a pregenerated edge list
+    def upstream_multihop_thres(self, source, threshold, min_members=10, hops=10, exclude=[], strict=False, allow_source_us=False):
         if(allow_source_us==False):        
             us, edges = self.upstream(source, threshold, exclude=(source + exclude))
         if(allow_source_us):
             us, edges = self.upstream(source, threshold, exclude=(exclude))
 
-        _, us = self.edge_threshold(edges, threshold, direction='upstream', strict=strict)
+        left = Promat.get_hemis(left_annot)
+        right = Promat.get_hemis(right_annot)
+        
+        _, us = self.edge_threshold(edges, threshold, direction='upstream', strict=strict, left=left, right=right)
 
         if(allow_source_us==False):
             before = source + us
