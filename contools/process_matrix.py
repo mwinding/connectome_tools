@@ -671,7 +671,7 @@ class Promat():
     @staticmethod
     def convert_df_to_pairwise(df, pairs_path, pairs=None):
 
-        if(pairs==None):
+        if(type(pairs)==type(None)):
             pairs = Promat.get_pairs(pairs_path)
         brain_pairs, brain_unpaired, brain_nonpaired = Promat.extract_pairs_from_list(df.index, pairList = pairs)
             
