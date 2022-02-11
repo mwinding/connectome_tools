@@ -48,12 +48,12 @@ class Celltype:
             plt.bar(ind, memberships.iloc[i], bottom = bottom, color=celltype_colors[i])
             bottom = bottom + memberships.iloc[i]
 
-    def identify_LNs(self, threshold, summed_adj, adj_aa, input_skids, outputs, exclude, pairs_path, sort = True):
+    def identify_LNs(self, threshold, summed_adj, aa_adj, input_skids, outputs, exclude, pairs_path, sort = True):
         pairs = Promat.get_pairs(pairs_path)
         mat = summed_adj.loc[np.intersect1d(summed_adj.index, self.skids), np.intersect1d(summed_adj.index, self.skids)]
         mat = mat.sum(axis=1)
 
-        mat_axon = adj_aa.loc[np.intersect1d(adj_aa.index, self.skids), np.intersect1d(adj_aa.index, input_skids)]
+        mat_axon = aa_adj.loc[np.intersect1d(aa_adj.index, self.skids), np.intersect1d(aa_adj.index, input_skids)]
         mat_axon = mat_axon.sum(axis=1)
 
         # convert to % outputs
@@ -69,7 +69,7 @@ class Celltype:
 
             skid_percent_output.append([skid, skid_output])
 
-        skid_percent_output = Promat.convert_df_to_pairwise(pd.DataFrame(skid_percent_output, columns=['skid', 'percent_output_intragroup']).set_index('skid'))
+        skid_percent_output = Promat.convert_df_to_pairwise(pd.DataFrame(skid_percent_output, columns=['skid', 'percent_output_intragroup']).set_index('skid'), pairs_path='', pairs=pairs)
 
         # identify neurons with >=50% output within group (or axoaxonic onto input neurons to group)
         LNs = skid_percent_output.groupby('pair_id').sum()      
@@ -104,7 +104,7 @@ class Celltype:
             
             skid_percent_in_out.append([skid, skid_input, skid_output])
 
-        skid_percent_in_out = Promat.convert_df_to_pairwise(pd.DataFrame(skid_percent_in_out, columns=['skid', 'percent_input_from_group', 'percent_output_to_group']).set_index('skid'))
+        skid_percent_in_out = Promat.convert_df_to_pairwise(pd.DataFrame(skid_percent_in_out, columns=['skid', 'percent_input_from_group', 'percent_output_to_group']).set_index('skid'), pairs_path='', pairs=pairs)
 
         # identify neurons with >=50% output within group (or axoaxonic onto input neurons to group)
         LNs = skid_percent_in_out.groupby('pair_id').sum()      
