@@ -547,7 +547,7 @@ def edge_thresholds(path, threshold, left_annot, right_annot, pairs, fraction_in
 
     for i, adj_mat in enumerate(adjs):
         matrix_pairs = Promat.extract_pairs_from_list(adj_mat.skids, pairs)
-        matrix_nonpaired = matrix_pairs[2].nonpaired # add in nonpaired neurons (including center neurons)
+        matrix_nonpaired = list(matrix_pairs[2].nonpaired) # add in nonpaired neurons (including center neurons)
         all_sources = list(matrix_pairs[0].leftid) + matrix_nonpaired
 
         all_edges_combined = adj_mat.threshold_edge_list(all_sources, threshold, left, right) # currently generates edge list for all paired -> paired/nonpaired, nonpaired -> paired/nonpaired
