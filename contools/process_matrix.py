@@ -114,7 +114,7 @@ class Adjacency_matrix():
 
         # convert to average (from sum) for paired neurons
         adj.loc['pairs'] = adj.loc['pairs'].values/2
-        adj.loc['nonpaired', 'pairs'] = adj.loc['nonpaired', 'pairs'].values/2 
+        #adj.loc['nonpaired', 'pairs'] = adj.loc['nonpaired', 'pairs'].values/2
 
         return(adj)
 
