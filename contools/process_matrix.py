@@ -983,7 +983,7 @@ class Promat():
     # recursive function that identifies all downstream partners X-hops away from source
     # uses pregenerated edge list from threshold_edge_list() or the split-pair version
     @staticmethod
-    def downstream_multihop(edges, sources, hops, hops_iter=1, pairs_combined=False, exclude_source=True, exclude_unpaired=False, pairList=[], exclude=[], exclude_skids_from_source=[]):
+    def downstream_multihop(edges, sources, hops, hops_iter=1, pairs_combined=False, exclude_source=True, exclude_unpaired=False, pairs=[], exclude=[], exclude_skids_from_source=[]):
         if(pairs_combined):
             id1 = 'upstream_pair_id'
             id2 = 'downstream_pair_id'
@@ -995,14 +995,14 @@ class Promat():
 
         if(hops_iter>1): sources = list(np.setdiff1d(sources, exclude_skids_from_source)) # exclude user-selected neurons from sources
 
-        if(exclude_unpaired): #only really relevant for pairs_combined=False; don't allow one neuron from a pair
-            sources_paired, sources_unpaired, sources_nonpaired = Promat.extract_pairs_from_list(sources, pairList)
-            sources = list(sources_paired.leftid) + list(sources_paired.rightid) + list(sources_nonpaired.nonpaired)
-
         ds = list(np.unique(edges_df.loc[np.intersect1d(sources, edges_df.index), id2]))
 
         if(exclude_source): ds = list(np.setdiff1d(ds, sources)) # exclude source from downstream
         ds = list(np.setdiff1d(ds, exclude)) # exclude user-selected neurons from downstream partners
+
+        if(exclude_unpaired): #only really relevant for pairs_combined=False; don't allow only one neuron from a pair to be downstream; requires pairs
+            ds_paired, ds_unpaired, ds_nonpaired = Promat.extract_pairs_from_list(ds, pairs)
+            ds = list(ds_paired.leftid) + list(ds_paired.rightid) + list(ds_nonpaired.nonpaired)
 
         if(hops_iter==hops):
             return([ds])
