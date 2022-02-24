@@ -115,7 +115,7 @@ class Celltype:
         LNs = list(np.setdiff1d(LNs, exclude)) # don't count neurons flagged as excludes: for example, MBONs/MBINs/RGNs probably shouldn't be LNs
         return(LNs, skid_percent_in_out)
 
-    def plot_morpho(self, color, save_path, figsize, volume=None, vol_color = (250, 250, 250, .05), azim=-90, elev=-90, dist=6, xlim3d=(-4500, 110000), ylim3d=(-4500, 110000)):
+    def plot_morpho(self, save_path, figsize, color=self.color, volume=None, vol_color = (250, 250, 250, .05), azim=-90, elev=-90, dist=6, xlim3d=(-4500, 110000), ylim3d=(-4500, 110000), linewidth=1.5, connectors=False):
         # recommended volume for L1 dataset, 'PS_Neuropil_manual'
 
         # plot neuron morphologies
@@ -123,33 +123,14 @@ class Celltype:
             neuropil = pymaid.get_volume(volume)
             neuropil.color = vol_color
 
-        n_rows = 1
-        n_cols = 1
-        alpha = 1
+        neurons = pymaid.get_neurons(self.skids)
 
-        fig = plt.figure(figsize=figsize)
-        gs = plt.GridSpec(n_rows, n_cols, figure=fig, wspace=plot_padding[0], hspace=plot_padding[1])
-        axs = np.empty((n_rows, n_cols), dtype=object)
-
-        for i, skids in enumerate([self.skids]):
-            if(color!=None):
-                col = color
-            else: col = self.color
-            neurons = pymaid.get_neurons(skids)
-
-            inds = np.unravel_index(i, shape=(n_rows, n_cols))
-            ax = fig.add_subplot(gs[inds], projection="3d")
-            axs[inds] = ax
-            navis.plot2d(x=[neurons, neuropil], connectors=connectors, cn_size=cn_size, color=col, alpha=alpha, ax=ax, method='3d_complex')
-
-            ax.azim = azim
-            ax.elev = elev
-            ax.dist = dist
-            ax.set_xlim3d(xlim3d)
-            ax.set_ylim3d(ylim3d)
-            if(names):
-                ax.text(x=(ax.get_xlim()[0] + ax.get_xlim()[1])/2 - ax.get_xlim()[1]*0.05, y=ax.get_ylim()[1]*4/5, z=0, 
-                        s=celltype_ct[i].name, transform=ax.transData, color=col, alpha=1)
+        fig, ax = navis.plot2d([neurons, cns], method='3d_complex', color = color, linewidth=linewidth, connectors=connectors, cn_size=2)
+        ax.azim = azim
+        ax.elev = elev
+        ax.dist = dist
+        ax.set_xlim3d(xlim3d)
+        ax.set_ylim3d(ylim3d)
 
         fig.savefig(f'{path}.png', format='png', dpi=300, transparent=True)
 
