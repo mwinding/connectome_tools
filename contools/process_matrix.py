@@ -923,7 +923,7 @@ class Promat():
     # compares neuron similarity based on inputs, outputs, or both
     # outputs a matrix where each row/column is a pair of neurons
     # NOT currently working
-    @staticmethod    
+    @staticmethod
     def similarity_matrix(matrix_path, type):
         matrix = pd.read_csv(matrix_path, header=0, index_col=0, quotechar='"', skipinitialspace=True)
 
@@ -983,7 +983,7 @@ class Promat():
     # recursive function that identifies all downstream partners X-hops away from source
     # uses pregenerated edge list from threshold_edge_list() or the split-pair version
     @staticmethod
-    def downstream_multihop(edges, sources, hops, hops_iter=1, pairs_combined=False, exclude_source=True, exclude_unpaired=False, pairs=[], exclude=[], exclude_skids_from_source=[]):
+    def downstream_multihop(edges, sources, hops, hops_iter=1, pairs_combined=False, exclude_source=True, exclude_unpaired=True, pairs=[], exclude=[], exclude_skids_from_source=[]):
         if(pairs_combined):
             id1 = 'upstream_pair_id'
             id2 = 'downstream_pair_id'
