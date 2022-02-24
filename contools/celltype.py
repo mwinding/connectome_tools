@@ -118,16 +118,19 @@ class Celltype:
     def plot_morpho(self, save_path, figsize, color=None, volume=None, vol_color = (250, 250, 250, .05), azim=-90, elev=-90, dist=6, xlim3d=(-4500, 110000), ylim3d=(-4500, 110000), linewidth=1.5, connectors=False):
         # recommended volume for L1 dataset, 'PS_Neuropil_manual'
 
+        neurons = pymaid.get_neurons(self.skids)
+
         if(color==None):
             color = self.color
-            
+
         if(volume!=None):
             neuropil = pymaid.get_volume(volume)
             neuropil.color = vol_color
+            fig, ax = navis.plot2d([neurons, neuropil], method='3d_complex', color = color, linewidth=linewidth, connectors=connectors, cn_size=2)
 
-        neurons = pymaid.get_neurons(self.skids)
+        if(volume==None):
+            fig, ax = navis.plot2d([neurons], method='3d_complex', color = color, linewidth=linewidth, connectors=connectors, cn_size=2)
 
-        fig, ax = navis.plot2d([neurons, cns], method='3d_complex', color = color, linewidth=linewidth, connectors=connectors, cn_size=2)
         ax.azim = azim
         ax.elev = elev
         ax.dist = dist
