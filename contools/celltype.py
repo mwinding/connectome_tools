@@ -115,10 +115,12 @@ class Celltype:
         LNs = list(np.setdiff1d(LNs, exclude)) # don't count neurons flagged as excludes: for example, MBONs/MBINs/RGNs probably shouldn't be LNs
         return(LNs, skid_percent_in_out)
 
-    def plot_morpho(self, save_path, figsize, color=self.color, volume=None, vol_color = (250, 250, 250, .05), azim=-90, elev=-90, dist=6, xlim3d=(-4500, 110000), ylim3d=(-4500, 110000), linewidth=1.5, connectors=False):
+    def plot_morpho(self, save_path, figsize, color=None, volume=None, vol_color = (250, 250, 250, .05), azim=-90, elev=-90, dist=6, xlim3d=(-4500, 110000), ylim3d=(-4500, 110000), linewidth=1.5, connectors=False):
         # recommended volume for L1 dataset, 'PS_Neuropil_manual'
 
-        # plot neuron morphologies
+        if(color==None):
+            color = self.color
+            
         if(volume!=None):
             neuropil = pymaid.get_volume(volume)
             neuropil.color = vol_color
