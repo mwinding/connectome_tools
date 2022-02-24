@@ -137,7 +137,7 @@ class Celltype:
         ax.set_xlim3d(xlim3d)
         ax.set_ylim3d(ylim3d)
 
-        fig.savefig(f'{path}.png', format='png', dpi=300, transparent=True)
+        fig.savefig(f'{save_path}.png', format='png', dpi=300, transparent=True)
 
 
 class Celltype_Analyzer:
