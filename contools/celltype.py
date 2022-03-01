@@ -115,7 +115,7 @@ class Celltype:
         LNs = list(np.setdiff1d(LNs, exclude)) # don't count neurons flagged as excludes: for example, MBONs/MBINs/RGNs probably shouldn't be LNs
         return(LNs, skid_percent_in_out)
 
-    def plot_morpho(self, save_path, figsize, alpha=1, color=None, volume=None, vol_color = (250, 250, 250, .05), azim=-90, elev=-90, dist=6, xlim3d=(-4500, 110000), ylim3d=(-4500, 110000), linewidth=1.5, connectors=False):
+    def plot_morpho(self, figsize, save_path=None, alpha=1, color=None, volume=None, vol_color = (250, 250, 250, .05), azim=-90, elev=-90, dist=6, xlim3d=(-4500, 110000), ylim3d=(-4500, 110000), linewidth=1.5, connectors=False):
         # recommended volume for L1 dataset, 'PS_Neuropil_manual'
 
         neurons = pymaid.get_neurons(self.skids)
@@ -137,7 +137,10 @@ class Celltype:
         ax.set_xlim3d(xlim3d)
         ax.set_ylim3d(ylim3d)
 
-        fig.savefig(f'{save_path}.png', format='png', dpi=300, transparent=True)
+        plt.show()
+
+        if(save_path!=None):
+            fig.savefig(f'{save_path}.png', format='png', dpi=300, transparent=True)
 
 
 class Celltype_Analyzer:
@@ -342,6 +345,28 @@ class Celltype_Analyzer:
 
         return (cat_types, cats_selected, skids_excluded)
 
+    # work on this one later
+    def plot_morphos(self, figsize, save_path=None, alpha=1, volume=None, vol_color = (250, 250, 250, .05), azim=-90, elev=-90, dist=6, xlim3d=(-4500, 110000), ylim3d=(-4500, 110000), linewidth=1.5, connectors=False):
+        # recommended volume for L1 dataset, 'PS_Neuropil_manual'
+
+        neurons = pymaid.get_neurons(self.skids)
+
+        if(volume!=None):
+            neuropil = pymaid.get_volume(volume)
+            neuropil.color = vol_color
+            fig, ax = navis.plot2d([neurons, neuropil], method='3d_complex', color=color, linewidth=linewidth, connectors=connectors, cn_size=2, alpha=alpha)
+
+        if(volume==None):
+            fig, ax = navis.plot2d([neurons], method='3d_complex', color=color, linewidth=linewidth, connectors=connectors, cn_size=2, alpha=alpha)
+
+        ax.azim = azim
+        ax.elev = elev
+        ax.dist = dist
+        ax.set_xlim3d(xlim3d)
+        ax.set_ylim3d(ylim3d)
+
+        plt.show()
+
     @staticmethod
     def get_skids_from_meta_meta_annotation(meta_meta, split=False):
         meta_annots = pymaid.get_annotated(meta_meta).name
@@ -354,7 +379,7 @@ class Celltype_Analyzer:
             return(skids, meta_annots)
 
     @staticmethod
-    def get_skids_from_meta_annotation(meta, split=False, unique=True):
+    def get_skids_from_meta_annotation(meta, split=False, unique=True, return_celltypes=False):
         annot_list = pymaid.get_annotated(meta).name
         skids = [list(pymaid.get_skids_by_annotation(annots)) for annots in annot_list]
         if(split==False):
@@ -363,7 +388,11 @@ class Celltype_Analyzer:
                 skids = list(np.unique(skids))
             return(skids)
         if(split==True):
-            return(skids, annot_list)
+            if(return_celltypes==True):
+                celltypes = [Celltype(annot_list[i], skids[i]) for i in range(len(annot_list))]
+                return(celltypes)
+            if(return_celltypes==False):
+                return(skids, annot_list)
     
     @staticmethod
     def default_celltypes(exclude = []):
