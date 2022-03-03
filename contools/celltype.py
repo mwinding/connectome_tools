@@ -308,7 +308,7 @@ class Celltype_Analyzer:
             data = data.iloc[np.setdiff1d(range(0, len(data)), indices)]
 
         unique_indices = np.unique(data.index)
-        cat_types = [Celltype(' + '.join([data.index.names[i] for i, value in enumerate(index) if value==True]), 
+        cat_types = [Celltype(' and '.join([data.index.names[i] for i, value in enumerate(index) if value==True]), 
                     list(data.loc[index].id)) for index in unique_indices]
 
         # apply threshold to all category types
@@ -317,11 +317,11 @@ class Celltype_Analyzer:
         
         # allows categories with no intersection ('singletons') to dodge the threshold
         if((exclude_singletons_from_threshold==True) & (threshold_dual_cats==None)): 
-            cat_bool = [(((len(x.get_skids())>=threshold) | ('+' not in x.get_name()))) for x in cat_types]
+            cat_bool = [(((len(x.get_skids())>=threshold) | (' and ' not in x.get_name()))) for x in cat_types]
 
         # allows categories with no intersection ('singletons') to dodge the threshold and additional threshold for dual combos
         if((exclude_singletons_from_threshold==True) & (threshold_dual_cats!=None)): 
-            cat_bool = [(((len(x.get_skids())>=threshold) | ('+' not in x.get_name())) | (len(x.get_skids())>=threshold_dual_cats) & (x.get_name().count('+')<2)) for x in cat_types]
+            cat_bool = [(((len(x.get_skids())>=threshold) | (' and ' not in x.get_name())) | (len(x.get_skids())>=threshold_dual_cats) & (x.get_name().count('+')<2)) for x in cat_types]
 
         cats_selected = list(np.array(cat_types)[cat_bool])
         skids_selected = [x for sublist in [cat.get_skids() for cat in cats_selected] for x in sublist]
