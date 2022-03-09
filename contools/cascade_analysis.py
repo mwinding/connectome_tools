@@ -95,7 +95,11 @@ class Cascade_Analyzer:
         return(data)
 
     @staticmethod
-    def run_cascade(i, cdispatch):
+    def run_cascade(i, cdispatch, indicator=None):
+
+        # used in run_cascades_parallel() to give a bit more feedback
+        if(indicator!=None):
+            print(indicator)
         return(cdispatch.multistart(start_nodes = i))
 
     @staticmethod
@@ -121,7 +125,7 @@ class Cascade_Analyzer:
             simultaneous=simultaneous,
         )
 
-        job = Parallel(n_jobs=-1)(delayed(Cascade_Analyzer.run_cascade)(source_indices_list[i], cdispatch) for i in tqdm(range(0, len(source_indices_list))))
+        job = Parallel(n_jobs=-1)(delayed(Cascade_Analyzer.run_cascade)(source_indices_list[i], cdispatch, indicator=f'Cascade {i}/{len(source_indices_list)} started...') for i in tqdm(range(0, len(source_indices_list))))
         data = [Cascade_Analyzer(name=source_names[i], hit_hist=hit_hist, n_init=n_init, skids_in_hit_hist=False, adj_index=adj.index) for i, hit_hist in enumerate(job)]
         return(data)
 
