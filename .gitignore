@@ -1,4 +1,16 @@
-.DS_Store
-__pycache__
-pymaid_creds.py
+# where raw data is stored
 data
+
+# where plots are saved
+plots
+
+# private CATMAID credentials
+pymaid_creds.py
+
+# links to current dataset
+data_settings.py
+
+# file management from macOS
+.DS_Store
+
+__pycache__

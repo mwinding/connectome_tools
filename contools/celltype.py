@@ -48,12 +48,14 @@ class Celltype:
             plt.bar(ind, memberships.iloc[i], bottom = bottom, color=celltype_colors[i])
             bottom = bottom + memberships.iloc[i]
 
-    def identify_LNs(self, threshold, summed_adj, adj_aa, input_skids, outputs, exclude, pairs_path, sort = True):
+    def identify_LNs(self, threshold, summed_adj, aa_adj, input_skids, outputs, exclude, pairs_path, sort = True, use_outputs_in_graph = False):
         pairs = Promat.get_pairs(pairs_path)
         mat = summed_adj.loc[np.intersect1d(summed_adj.index, self.skids), np.intersect1d(summed_adj.index, self.skids)]
         mat = mat.sum(axis=1)
+        outputs_in_graph = summed_adj.loc[np.intersect1d(summed_adj.index, self.skids), :]
+        outputs_in_graph = outputs_in_graph.sum(axis=1)
 
-        mat_axon = adj_aa.loc[np.intersect1d(adj_aa.index, self.skids), np.intersect1d(adj_aa.index, input_skids)]
+        mat_axon = aa_adj.loc[np.intersect1d(aa_adj.index, self.skids), np.intersect1d(aa_adj.index, input_skids)]
         mat_axon = mat_axon.sum(axis=1)
 
         # convert to % outputs
@@ -61,6 +63,9 @@ class Celltype:
         for skid in self.skids:
             skid_output = 0
             output = sum(outputs.loc[skid, :])
+            if(use_outputs_in_graph):
+                output = outputs_in_graph.loc[skid]
+
             if(output != 0):
                 if(skid in mat.index):
                     skid_output = skid_output + mat.loc[skid]/output
@@ -69,11 +74,11 @@ class Celltype:
 
             skid_percent_output.append([skid, skid_output])
 
-        skid_percent_output = Promat.convert_df_to_pairwise(pd.DataFrame(skid_percent_output, columns=['skid', 'percent_output_intragroup']).set_index('skid'))
+        skid_percent_output = Promat.convert_df_to_pairwise(pd.DataFrame(skid_percent_output, columns=['skid', 'percent_output_intragroup']).set_index('skid'), pairs_path='', pairs=pairs)
 
-        # identify neurons with >=50% output within group (or axoaxonic onto input neurons to group)
-        LNs = skid_percent_output.groupby('pair_id').sum()      
-        LNs = LNs[np.array([x for sublist in (LNs>=threshold*2).values for x in sublist])]
+        # identify neurons with >={threshold}% output within group (or axoaxonic onto input neurons to group)
+        LNs = skid_percent_output.groupby('pair_id').mean()      
+        LNs = LNs[np.array([x for sublist in (LNs>=threshold).values for x in sublist])]
         LNs = list(LNs.index) # identify pair_ids of all neurons pairs/nonpaired over threshold
         LNs = [list(skid_percent_output.loc[(slice(None), skid), :].index) for skid in LNs] # pull all left/right pairs or just nonpaired neurons
         LNs = [x[2] for sublist in LNs for x in sublist]
@@ -104,16 +109,43 @@ class Celltype:
             
             skid_percent_in_out.append([skid, skid_input, skid_output])
 
-        skid_percent_in_out = Promat.convert_df_to_pairwise(pd.DataFrame(skid_percent_in_out, columns=['skid', 'percent_input_from_group', 'percent_output_to_group']).set_index('skid'))
+        skid_percent_in_out = Promat.convert_df_to_pairwise(pd.DataFrame(skid_percent_in_out, columns=['skid', 'percent_input_from_group', 'percent_output_to_group']).set_index('skid'), pairs_path='', pairs=pairs)
 
-        # identify neurons with >=50% output within group (or axoaxonic onto input neurons to group)
-        LNs = skid_percent_in_out.groupby('pair_id').sum()      
-        LNs = LNs[((LNs>=threshold*2).sum(axis=1)==2).values]
+        # identify neurons with >={threshold}% output within group (or axoaxonic onto input neurons to group)
+        LNs = skid_percent_in_out.groupby('pair_id').mean()      
+        LNs = LNs[((LNs>=threshold).sum(axis=1)==2).values]
         LNs = list(LNs.index) # identify pair_ids of all neurons pairs/nonpaired over threshold
         LNs = [list(skid_percent_in_out.loc[(slice(None), skid), :].index) for skid in LNs] # pull all left/right pairs or just nonpaired neurons
         LNs = [x[2] for sublist in LNs for x in sublist]
         LNs = list(np.setdiff1d(LNs, exclude)) # don't count neurons flagged as excludes: for example, MBONs/MBINs/RGNs probably shouldn't be LNs
         return(LNs, skid_percent_in_out)
+
+    def plot_morpho(self, figsize, save_path=None, alpha=1, color=None, volume=None, vol_color = (250, 250, 250, .05), azim=-90, elev=-90, dist=6, xlim3d=(-4500, 110000), ylim3d=(-4500, 110000), linewidth=1.5, connectors=False):
+        # recommended volume for L1 dataset, 'PS_Neuropil_manual'
+
+        neurons = pymaid.get_neurons(self.skids)
+
+        if(color==None):
+            color = self.color
+
+        if(volume!=None):
+            neuropil = pymaid.get_volume(volume)
+            neuropil.color = vol_color
+            fig, ax = navis.plot2d([neurons, neuropil], method='3d_complex', color=color, linewidth=linewidth, connectors=connectors, cn_size=2, alpha=alpha)
+
+        if(volume==None):
+            fig, ax = navis.plot2d([neurons], method='3d_complex', color=color, linewidth=linewidth, connectors=connectors, cn_size=2, alpha=alpha)
+
+        ax.azim = azim
+        ax.elev = elev
+        ax.dist = dist
+        ax.set_xlim3d(xlim3d)
+        ax.set_ylim3d(ylim3d)
+
+        plt.show()
+
+        if(save_path!=None):
+            fig.savefig(f'{save_path}.png', format='png', dpi=300, transparent=True)
 
 
 class Celltype_Analyzer:
@@ -276,7 +308,7 @@ class Celltype_Analyzer:
             data = data.iloc[np.setdiff1d(range(0, len(data)), indices)]
 
         unique_indices = np.unique(data.index)
-        cat_types = [Celltype(' + '.join([data.index.names[i] for i, value in enumerate(index) if value==True]), 
+        cat_types = [Celltype(' and '.join([data.index.names[i] for i, value in enumerate(index) if value==True]), 
                     list(data.loc[index].id)) for index in unique_indices]
 
         # apply threshold to all category types
@@ -285,11 +317,11 @@ class Celltype_Analyzer:
         
         # allows categories with no intersection ('singletons') to dodge the threshold
         if((exclude_singletons_from_threshold==True) & (threshold_dual_cats==None)): 
-            cat_bool = [(((len(x.get_skids())>=threshold) | ('+' not in x.get_name()))) for x in cat_types]
+            cat_bool = [(((len(x.get_skids())>=threshold) | (' and ' not in x.get_name()))) for x in cat_types]
 
         # allows categories with no intersection ('singletons') to dodge the threshold and additional threshold for dual combos
         if((exclude_singletons_from_threshold==True) & (threshold_dual_cats!=None)): 
-            cat_bool = [(((len(x.get_skids())>=threshold) | ('+' not in x.get_name())) | (len(x.get_skids())>=threshold_dual_cats) & (x.get_name().count('+')<2)) for x in cat_types]
+            cat_bool = [(((len(x.get_skids())>=threshold) | (' and ' not in x.get_name())) | (len(x.get_skids())>=threshold_dual_cats) & (x.get_name().count('+')<2)) for x in cat_types]
 
         cats_selected = list(np.array(cat_types)[cat_bool])
         skids_selected = [x for sublist in [cat.get_skids() for cat in cats_selected] for x in sublist]
@@ -318,6 +350,28 @@ class Celltype_Analyzer:
 
         return (cat_types, cats_selected, skids_excluded)
 
+    # work on this one later
+    def plot_morphos(self, figsize, save_path=None, alpha=1, volume=None, vol_color = (250, 250, 250, .05), azim=-90, elev=-90, dist=6, xlim3d=(-4500, 110000), ylim3d=(-4500, 110000), linewidth=1.5, connectors=False):
+        # recommended volume for L1 dataset, 'PS_Neuropil_manual'
+
+        neurons = pymaid.get_neurons(self.skids)
+
+        if(volume!=None):
+            neuropil = pymaid.get_volume(volume)
+            neuropil.color = vol_color
+            fig, ax = navis.plot2d([neurons, neuropil], method='3d_complex', color=color, linewidth=linewidth, connectors=connectors, cn_size=2, alpha=alpha)
+
+        if(volume==None):
+            fig, ax = navis.plot2d([neurons], method='3d_complex', color=color, linewidth=linewidth, connectors=connectors, cn_size=2, alpha=alpha)
+
+        ax.azim = azim
+        ax.elev = elev
+        ax.dist = dist
+        ax.set_xlim3d(xlim3d)
+        ax.set_ylim3d(ylim3d)
+
+        plt.show()
+
     @staticmethod
     def get_skids_from_meta_meta_annotation(meta_meta, split=False):
         meta_annots = pymaid.get_annotated(meta_meta).name
@@ -330,7 +384,7 @@ class Celltype_Analyzer:
             return(skids, meta_annots)
 
     @staticmethod
-    def get_skids_from_meta_annotation(meta, split=False, unique=True):
+    def get_skids_from_meta_annotation(meta, split=False, unique=True, return_celltypes=False):
         annot_list = pymaid.get_annotated(meta).name
         skids = [list(pymaid.get_skids_by_annotation(annots)) for annots in annot_list]
         if(split==False):
@@ -339,7 +393,11 @@ class Celltype_Analyzer:
                 skids = list(np.unique(skids))
             return(skids)
         if(split==True):
-            return(skids, annot_list)
+            if(return_celltypes==True):
+                celltypes = [Celltype(annot_list[i], skids[i]) for i in range(len(annot_list))]
+                return(celltypes)
+            if(return_celltypes==False):
+                return(skids, annot_list)
     
     @staticmethod
     def default_celltypes(exclude = []):
