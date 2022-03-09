@@ -4,9 +4,6 @@ import pandas as pd
 from contools.process_matrix import Promat
 from contools.traverse import Cascade, to_transmission_matrix, TraverseDispatcher
 
-#from contools.traverse import Cascade, to_transmission_matrix
-#from contools.traverse import TraverseDispatcher
-
 from joblib import Parallel, delayed
 from tqdm import tqdm
 
@@ -95,15 +92,11 @@ class Cascade_Analyzer:
         return(data)
 
     @staticmethod
-    def run_cascade(i, cdispatch, indicator=None):
-
-        # used in run_cascades_parallel() to give a bit more feedback
-        if(indicator!=None):
-            print(indicator)
-        return(cdispatch.multistart(start_nodes = i))
+    def run_cascade(start_nodes, cdispatch, disable_tqdm=False):
+        return(cdispatch.multistart(start_nodes=start_nodes, disable=disable_tqdm))
 
     @staticmethod
-    def run_cascades_parallel(source_skids_list, source_names, stop_skids, adj, p, max_hops, n_init, simultaneous):
+    def run_cascades_parallel(source_skids_list, source_names, stop_skids, adj, p, max_hops, n_init, simultaneous, disable_tqdm=True):
         # adj format must be pd.DataFrame with skids for index/columns
 
         source_indices_list = []
@@ -125,7 +118,7 @@ class Cascade_Analyzer:
             simultaneous=simultaneous,
         )
 
-        job = Parallel(n_jobs=-1)(delayed(Cascade_Analyzer.run_cascade)(source_indices_list[i], cdispatch, indicator=f'Cascade {i}/{len(source_indices_list)} started...') for i in tqdm(range(0, len(source_indices_list))))
+        job = Parallel(n_jobs=-1)(delayed(Cascade_Analyzer.run_cascade)(source_indices_list[i], cdispatch, disable_tqdm=disable_tqdm) for i in tqdm(range(0, len(source_indices_list))))
         data = [Cascade_Analyzer(name=source_names[i], hit_hist=hit_hist, n_init=n_init, skids_in_hit_hist=False, adj_index=adj.index) for i, hit_hist in enumerate(job)]
         return(data)
 

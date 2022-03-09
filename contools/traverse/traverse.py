@@ -58,10 +58,10 @@ class TraverseDispatcher:
         self.simultaneous = simultaneous
         self.verbose = verbose
 
-    def start(self, start_node):
+    def start(self, start_node, disable):
         worker = self._worker
         hit_hist = np.zeros((worker.n_verts, worker.max_hops))
-        for i in tqdm(range(self.n_init)):
+        for i in tqdm(range(self.n_init), disable=disable):
             worker.start(start_node)
             traversal = worker.traversal_
             for level, nodes in enumerate(traversal):
@@ -69,14 +69,14 @@ class TraverseDispatcher:
         self.hit_hist_ = hit_hist
         return hit_hist
 
-    def multistart(self, start_nodes):
+    def multistart(self, start_nodes, disable):
         if self.simultaneous:
-            hop_hist = self.start(start_nodes)
+            hop_hist = self.start(start_nodes, disable=disable)
         else:
             n_verts = len(self._worker.transition_probs)
             hop_hist = np.zeros((n_verts, self._worker.max_hops))
             for s in start_nodes:
-                hop_hist += self.start(s)
+                hop_hist += self.start(s, disable=disable)
         return hop_hist
 
 
