@@ -751,29 +751,38 @@ class Promat():
     # converts array of skids into left-right pairs in separate columns
     # puts unpaired and nonpaired neurons in different lists
     @staticmethod
-    def extract_pairs_from_list(skids, pairList):
+    def extract_pairs_from_list(skids, pairList, return_pair_ids=False):
 
         pairs = []
         unpaired = []
         nonpaired = []
         for i in skids:
             if((int(i) not in pairList.leftid.values) & (int(i) not in pairList.rightid.values)):
-                nonpaired.append({'nonpaired': int(i)})
+                nonpaired.append([int(i)])
                 continue
 
             if((int(i) in pairList["leftid"].values) & (Promat.get_paired_skids(int(i), pairList)[1] in skids)):
                 pair = Promat.get_paired_skids(int(i), pairList)
-                pairs.append({'leftid': pair[0], 'rightid': pair[1]})
+                pairs.append([pair[0], pair[1]])
 
             if(((int(i) in pairList["leftid"].values) & (Promat.get_paired_skids(int(i), pairList)[1] not in skids)|
                 (int(i) in pairList["rightid"].values) & (Promat.get_paired_skids(int(i), pairList)[0] not in skids))):
-                unpaired.append({'unpaired': int(i)})
-
+                unpaired.append([int(i)])
 
         pairs = pd.DataFrame(pairs, columns=['leftid', 'rightid'])
         unpaired = pd.DataFrame(unpaired, columns=['unpaired'])
         nonpaired = pd.DataFrame(nonpaired, columns=['nonpaired'])
-        return(pairs, unpaired, nonpaired)
+
+        if(return_pair_ids==False):
+            return(pairs, unpaired, nonpaired)
+
+        if(return_pair_ids):
+            
+            pairs_pair_id = list(pairs.leftid)
+            nonpaired_pair_id = list(nonpaired.nonpaired)
+            pair_ids = pairs_pair_id + nonpaired_pair_id
+
+            return(pairs, unpaired, nonpaired, pair_ids)
 
     # loads neurons pairs from selected pymaid annotation
     @staticmethod
