@@ -8,16 +8,23 @@ from joblib import Parallel, delayed
 from tqdm import tqdm
 
 class Cascade_Analyzer:
-    def __init__(self, name, hit_hist, n_init, skids_in_hit_hist=True, adj_index=None): # changed mg to adj_index for custom/modified adj matrices
+    def __init__(self, name, hit_hist, n_init, pairs, pairwise=False, skids_in_hit_hist=True, adj_index=None): # changed mg to adj_index for custom/modified adj matrices
         self.hit_hist = hit_hist
         self.name = name
         self.n_init = n_init
+        self.pairs = pairs
+        
         if(skids_in_hit_hist):
             self.adj_index = hit_hist.index
             self.skid_hit_hist = hit_hist
+
         if(skids_in_hit_hist==False):
             self.adj_index = adj_index
             self.skid_hit_hist = pd.DataFrame(hit_hist, index = self.adj_index) # convert indices to skids
+
+        if(pairwise):
+            self.hh_inter = self.interlaced_hit_hist()
+            self.hh_pairwise = self.average_pairwise_hit_hist()
 
     def get_hit_hist(self):
         return(self.hit_hist)
@@ -38,6 +45,64 @@ class Cascade_Analyzer:
         if(len(index_match)!=1):
             print(f'Not one match for skid {skid}!')
             return(False)
+
+    def interlaced_hit_hist(self):
+
+        hit_hist = self.skid_hit_hist.copy()
+        skids = hit_hist.index
+        skids_pairs, skids_unpaired, skids_nonpaired = Promat.extract_pairs_from_list(skids, self.pairs)
+        
+        # left_right interlaced order for skid_hit_hist
+        pair_order = []
+        for i in range(0, len(skids_pairs)):
+            pair_order.append(skids_pairs.iloc[i].leftid)
+            pair_order.append(skids_pairs.iloc[i].rightid)
+
+        order = pair_order + list(skids_nonpaired.nonpaired)
+        interlaced_hit_hist = hit_hist.loc[order, :]
+
+        index_df = pd.DataFrame([['pairs', Promat.get_paired_skids(skid, self.pairs)[0], skid] for skid in pair_order] + [['nonpaired', skid, skid] for skid in list(skids_nonpaired.nonpaired)], 
+                                columns = ['pair_status', 'pair_id', 'skid'])
+        index = pd.MultiIndex.from_frame(index_df)
+
+        interlaced_hit_hist.index = index
+        return(interlaced_hit_hist)
+
+    def average_pairwise_hit_hist(self):
+
+        hit_hist = self.hh_inter.copy()
+        hit_hist = adj.groupby('pair_id', axis = 'index').sum()
+
+        order = [x[1] for x in self.hh_inter.index] # pulls just pair_id
+        
+        # remove duplicates (in pair_ids)
+        order_unique = []
+        for x in order:
+            if (order_unique.count(x) == 0):
+                order_unique.append(x)
+
+        # order as before
+        hit_hist = hit_hist.loc[order_unique, :]
+
+        # regenerate multiindex
+        index = [x[0:2] for x in self.hh_inter.index] # remove skid ids from index
+
+        # remove duplicates (in pair_ids)
+        index_unique = []
+        for x in index:
+            if (index_unique.count(x) == 0):
+                index_unique.append(x)
+
+        # add back appropriate multiindex
+        index_df = pd.DataFrame(index_unique, columns = ['pair_status', 'pair_id'])
+        index_df = pd.MultiIndex.from_frame(index_df)
+        hit_hist.index = index_df
+
+        # convert to average (from sum) for paired neurons
+        hit_hist.loc['pairs'] = hit_hist.loc['pairs'].values/2
+        #adj.loc['nonpaired', 'pairs'] = adj.loc['nonpaired', 'pairs'].values/2
+
+        return(hit_hist)
 
     def pairwise_threshold_detail(self, threshold, hops, pairs_path, excluded_skids=False, include_source=False):
 
