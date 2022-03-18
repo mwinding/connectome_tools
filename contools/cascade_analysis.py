@@ -109,30 +109,32 @@ class Cascade_Analyzer:
 
         # convert to average (from sum) for paired neurons
         hit_hist.loc['pairs'] = hit_hist.loc['pairs'].values/2
-        #adj.loc['nonpaired', 'pairs'] = adj.loc['nonpaired', 'pairs'].values/2
 
         return(hit_hist)
 
-    def pairwise_threshold_detail(self, threshold, hops, pairs_path, excluded_skids=False, include_source=False):
+    def pairwise_threshold(self, threshold, hops, excluded_skids=[], include_source=False, return_pair_ids=False):
 
+        # identify downstream neurons
         if(include_source):
-            neurons = np.where((self.skid_hit_hist.iloc[:, 0:(hops+1)]).sum(axis=1)>threshold)[0]
+            ds_bool = np.where((self.hh_pairwise.iloc[:, 0:(hops+1)]).sum(axis=1)>threshold)[0]
         if(include_source==False):
-            neurons = np.where((self.skid_hit_hist.iloc[:, 1:(hops+1)]).sum(axis=1)>threshold)[0]
+            ds_bool = np.where((self.hh_pairwise.iloc[:, 1:(hops+1)]).sum(axis=1)>threshold)[0]
 
-        neurons = self.skid_hit_hist.index[neurons]
+        # get pair_ids from boolean
+        neurons = [x[1] for x in self.hh_pairwise.index[ds_bool]]
 
-        # remove particular skids if included
-        if(excluded_skids!=False): 
-            neurons = np.delete(neurons, excluded_skids)
+        # remove user-defined skids
+        if(len(excluded_skids)>0):
+            neurons = list(np.setdiff1d(neurons, excluded_skids))
 
-        neurons_pairs, neurons_unpaired, neurons_nonpaired = Promat.extract_pairs_from_list(neurons, Promat.get_pairs(pairs_path))
-        return(neurons_pairs, neurons_unpaired, neurons_nonpaired)
-
-    def pairwise_threshold(self, threshold, hops, pairs_path, excluded_skids=False, include_source=False):
-        neurons_pairs, neurons_unpaired, neurons_nonpaired = Cascade_Analyzer.pairwise_threshold_detail(self, threshold, hops, pairs_path, excluded_skids=excluded_skids, include_source=include_source)
-        skids = np.concatenate([neurons_pairs.leftid, neurons_pairs.rightid, neurons_nonpaired.nonpaired])
-        return(skids)
+        # expand to include left/right neurons (pairwise hit_hist uses only pair_ids, which are left skids and all nonpaired skids)
+        if(return_pair_ids==False):
+            all_neurons = [Promat.get_paired_skids(neuron, self.pairs) for neuron in neurons] # expand to include left/right neurons
+            all_neurons = [x for sublist in all_neurons for x in sublist] # unlist skids
+            return(all_neurons)
+            
+        if(return_pair_ids):
+            return(neurons)
 
     def cascades_in_celltypes(self, cta, hops, start_hop=1, normalize='visits', pre_counts = None):
         skid_hit_hist = self.skid_hit_hist
