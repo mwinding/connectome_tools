@@ -13,7 +13,7 @@ class Cascade_Analyzer:
         self.name = name
         self.n_init = n_init
         self.pairs = pairs
-        
+
         if(skids_in_hit_hist):
             self.adj_index = hit_hist.index
             self.skid_hit_hist = hit_hist
@@ -34,6 +34,15 @@ class Cascade_Analyzer:
 
     def get_name(self):
         return(self.name)
+
+    def set_pairs(self, pairs):
+        self.pairs = pairs
+
+    def set_hh_inter(self, hh_inter):
+        self.hh_inter = hh_inter
+
+    def set_hh_pairwise(self, hh_pairwise):
+        self.hh_pairwise = hh_pairwise
 
     def index_to_skid(self, index):
         return(self.adj_index[index].name)
