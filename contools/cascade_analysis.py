@@ -80,7 +80,7 @@ class Cascade_Analyzer:
     def average_pairwise_hit_hist(self):
 
         hit_hist = self.hh_inter.copy()
-        hit_hist = adj.groupby('pair_id', axis = 'index').sum()
+        hit_hist = hit_hist.groupby('pair_id', axis = 'index').sum()
 
         order = [x[1] for x in self.hh_inter.index] # pulls just pair_id
         
