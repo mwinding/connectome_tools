@@ -114,14 +114,17 @@ class Cascade_Analyzer:
 
     def pairwise_threshold(self, threshold, hops, excluded_skids=[], include_source=False, return_pair_ids=False):
 
+        pairs = self.pairs
+        hit_hist = self.hh_pairwise
+
         # identify downstream neurons
         if(include_source):
-            ds_bool = np.where((self.hh_pairwise.iloc[:, 0:(hops+1)]).sum(axis=1)>threshold)[0]
+            ds_bool = np.where((hit_hist.iloc[:, 0:(hops+1)]).sum(axis=1)>=threshold)[0]
         if(include_source==False):
-            ds_bool = np.where((self.hh_pairwise.iloc[:, 1:(hops+1)]).sum(axis=1)>threshold)[0]
+            ds_bool = np.where((hit_hist.iloc[:, 1:(hops+1)]).sum(axis=1)>=threshold)[0]
 
         # get pair_ids from boolean
-        neurons = [x[1] for x in self.hh_pairwise.index[ds_bool]]
+        neurons = [x[1] for x in hit_hist.index[ds_bool]]
 
         # remove user-defined skids
         if(len(excluded_skids)>0):
@@ -129,7 +132,7 @@ class Cascade_Analyzer:
 
         # expand to include left/right neurons (pairwise hit_hist uses only pair_ids, which are left skids and all nonpaired skids)
         if(return_pair_ids==False):
-            all_neurons = [Promat.get_paired_skids(neuron, self.pairs) for neuron in neurons] # expand to include left/right neurons
+            all_neurons = [Promat.get_paired_skids(neuron, pairs) for neuron in neurons] # expand to include left/right neurons
             all_neurons = [x for sublist in all_neurons for x in sublist] # unlist skids
             return(all_neurons)
             
@@ -219,3 +222,29 @@ class Cascade_Analyzer:
         data = Cascade_Analyzer(name=name, hit_hist=cascade, n_init=n_init, skids_in_hit_hist=False, adj_index=adj.index)
         return(data)
 
+    @staticmethod
+    def pairwise_threshold(hh_pairwise, pairs, threshold, hops, excluded_skids=[], include_source=False, return_pair_ids=False):
+
+        hit_hist = hh_pairwise
+
+        # identify downstream neurons
+        if(include_source):
+            ds_bool = np.where((hit_hist.iloc[:, 0:(hops+1)]).sum(axis=1)>=threshold)[0]
+        if(include_source==False):
+            ds_bool = np.where((hit_hist.iloc[:, 1:(hops+1)]).sum(axis=1)>=threshold)[0]
+
+        # get pair_ids from boolean
+        neurons = [x[1] for x in hit_hist.index[ds_bool]]
+
+        # remove user-defined skids
+        if(len(excluded_skids)>0):
+            neurons = list(np.setdiff1d(neurons, excluded_skids))
+
+        # expand to include left/right neurons (pairwise hit_hist uses only pair_ids, which are left skids and all nonpaired skids)
+        if(return_pair_ids==False):
+            all_neurons = [Promat.get_paired_skids(neuron, pairs) for neuron in neurons] # expand to include left/right neurons
+            all_neurons = [x for sublist in all_neurons for x in sublist] # unlist skids
+            return(all_neurons)
+            
+        if(return_pair_ids):
+            return(neurons)
