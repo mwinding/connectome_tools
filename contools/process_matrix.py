@@ -746,8 +746,8 @@ class Promat():
 
         if(type(skid)==list):
             data = [Promat.get_paired_skids(x, pairList) for x in skid]
-            df = pd.DataFrame(data, columns = ['leftid', 'rightid'])
-            return(df)
+            #df = pd.DataFrame(data, columns = ['leftid', 'rightid'])
+            return(data)
 
     # converts array of skids into left-right pairs in separate columns
     # puts unpaired and nonpaired neurons in different lists
