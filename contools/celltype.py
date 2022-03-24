@@ -158,8 +158,8 @@ class Celltype_Analyzer:
         self.adj = adj
         self.skids = [x for sublist in [celltype.get_skids() for celltype in self.Celltypes] for x in sublist]
 
-    def add_celltype(self, Celltype):
-        self.Celltypes = self.Celltypes + Celltype
+    def add_celltype(self, celltype):
+        self.Celltypes = self.Celltypes + [celltype]
         self.num += 1
         self.skids = [x for sublist in [celltype.get_skids() for celltype in self.Celltypes] for x in sublist]
         self.celltype_names = [celltype.get_name() for celltype in self.Celltypes]
