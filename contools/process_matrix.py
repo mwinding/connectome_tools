@@ -1000,6 +1000,10 @@ class Promat():
         if(pairs_combined==False):
             id1 = 'upstream_skid'
             id2 = 'downstream_skid'
+            if(len(pairs)==0):
+                print('pairs variable required is using split-pairs edge list!')
+                print('     use Promat.get_pairs(pairs_path), or')
+                print('     use paired edge list and set pairs_combined=True')
 
         edges_df = edges.set_index(id1)
 
@@ -1018,7 +1022,7 @@ class Promat():
             return([ds])
         else:
             hops_iter += 1
-            return([ds] + Promat.downstream_multihop(edges=edges, sources=ds, hops=hops, hops_iter=hops_iter, pairs_combined=pairs_combined, exclude_source=exclude_source, exclude_unpaired=exclude_unpaired, pairs=pairs))
+            return([ds] + Promat.downstream_multihop(edges=edges, sources=ds, hops=hops, hops_iter=hops_iter, pairs_combined=pairs_combined, exclude = exclude + ds, exclude_source=exclude_source, exclude_unpaired=exclude_unpaired, pairs=pairs))
 
     # recursive function that identifies all upstream partners X-hops away from source
     # uses pregenerated edge list from threshold_edge_list() or the split-pair version
@@ -1030,6 +1034,10 @@ class Promat():
         if(pairs_combined==False): 
             id1 = 'downstream_skid'
             id2 = 'upstream_skid'
+            if(len(pairs)==0):
+                print('pairs variable required is using split-pairs edge list!')
+                print('     use Promat.get_pairs(pairs_path), or')
+                print('     use paired edge list and set pairs_combined=True')
 
         edges_df = edges.set_index(id1)
 
