@@ -1056,7 +1056,7 @@ class Promat():
             return([us])
         else:
             hops_iter += 1
-            return([us] + Promat.upstream_multihop(edges=edges, sources=ds, hops=hops, hops_iter=hops_iter, pairs_combined=pairs_combined, exclude_source=exclude_source, exclude_unpaired=exclude_unpaired, pairs=pairs))
+            return([us] + Promat.upstream_multihop(edges=edges, sources=us, hops=hops, hops_iter=hops_iter, pairs_combined=pairs_combined, exclude = exclude + us, exclude_source=exclude_source, exclude_unpaired=exclude_unpaired, pairs=pairs))
 
     # use paired edgelist [e.g. ad_edges = pd.read_csv('data/edges_threshold/ad_all-paired-edges.csv', index_col=0)]
     @staticmethod
