@@ -156,12 +156,13 @@ class Celltype_Analyzer:
         self.known_types = []
         self.known_types_names = []
         self.adj = adj
-        self.skids = [x for sublist in [celltype.get_skids() for celltype in list_Celltypes] for x in sublist]
+        self.skids = [x for sublist in [celltype.get_skids() for celltype in self.Celltypes] for x in sublist]
 
     def add_celltype(self, Celltype):
         self.Celltypes = self.Celltypes + Celltype
         self.num += 1
-        self.generate_adj()
+        self.skids = [x for sublist in [celltype.get_skids() for celltype in self.Celltypes] for x in sublist]
+        self.celltype_names = [celltype.get_name() for celltype in self.Celltypes]
 
     def set_known_types(self, list_Celltypes, unknown=True):
 
