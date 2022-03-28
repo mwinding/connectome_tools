@@ -726,7 +726,7 @@ class Promat():
 
     # returns paired skids in array [left, right]; can input either left or right skid of a pair to identify
     @staticmethod
-    def get_paired_skids(skid, pairList, verbose=False):
+    def get_paired_skids(skid, pairList, verbose=False, unlist=False):
 
         if(type(skid)!=list):
             if(skid in pairList["leftid"].values):
@@ -746,6 +746,8 @@ class Promat():
 
         if(type(skid)==list):
             data = [Promat.get_paired_skids(x, pairList) for x in skid]
+            if(unlist):
+                data = [x for sublist in data for x in sublist]
             #df = pd.DataFrame(data, columns = ['leftid', 'rightid'])
             return(data)
 
