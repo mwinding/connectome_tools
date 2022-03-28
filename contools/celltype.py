@@ -222,7 +222,7 @@ class Celltype_Analyzer:
         return(iou_matrix)
 
     # calculate fraction of neurons in each cell type that have previously known cell type annotations
-    def memberships(self, by_celltype=True, raw_num=False): # raw_num=True outputs number of neurons in each category instead of fraction
+    def memberships(self, by_celltype=True, raw_num=False, raw_num_col=True): # raw_num=True outputs number of neurons in each category instead of fraction
         fraction_type = np.zeros((len(self.known_types), len(self.Celltypes)))
         for i, knowntype in enumerate(self.known_types):
             for j, celltype in enumerate(self.Celltypes):
@@ -238,9 +238,13 @@ class Celltype_Analyzer:
                 if(by_celltype==False): # fraction of each known category that is in new cell type
                     fraction = len(np.intersect1d(celltype.get_skids(), knowntype.get_skids()))/len(knowntype.get_skids())
                     fraction_type[i, j] = fraction
-
-        fraction_type = pd.DataFrame(fraction_type, index = self.known_types_names, 
+        
+        if(raw_num_col):
+            fraction_type = pd.DataFrame(fraction_type, index = self.known_types_names, 
                                     columns = [f'{celltype.get_name()} ({len(celltype.get_skids())})' for celltype in self.Celltypes])
+        if(raw_num_col==False):
+            fraction_type = pd.DataFrame(fraction_type, index = self.known_types_names, 
+                                    columns = [celltype.get_name() for celltype in self.Celltypes])
         
         if(raw_num==True):
             fraction_type = fraction_type.astype(int)
