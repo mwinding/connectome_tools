@@ -584,33 +584,6 @@ class Adjacency_matrix():
 
         edges = pd.DataFrame(edges, columns = ['upstream_pair_id', 'downstream_pair_id'])
         return(edges)
-
-    # generate a binary connectivity matrix that displays number of hops between neuron types
-    def hop_matrix(self, layer_id_skids, source_leftid, destination_leftid, include_start=False):
-        mat = pd.DataFrame(np.zeros(shape = (len(source_leftid), len(destination_leftid))), 
-                            index = source_leftid, 
-                            columns = destination_leftid)
-
-        for index in mat.index:
-            data = layer_id_skids.loc[index, :]
-            for i, hop in enumerate(data):
-                for column in mat.columns:
-                    if(column in hop):
-                        if(include_start==True): # if the source of the hop signal is the first layer
-                            mat.loc[index, column] = i
-                        if(include_start==False): # if the first layer is the first layer downstream of source
-                            mat.loc[index, column] = i+1
-
-
-        max_value = mat.values.max()
-        mat_plotting = mat.copy()
-
-        for index in mat_plotting.index:
-            for column in mat_plotting.columns:
-                if(mat_plotting.loc[index, column]>0):
-                    mat_plotting.loc[index, column] = 1 - (mat_plotting.loc[index, column] - max_value)
-
-        return(mat, mat_plotting)
             
 class Promat():
 
@@ -1059,6 +1032,34 @@ class Promat():
         else:
             hops_iter += 1
             return([us] + Promat.upstream_multihop(edges=edges, sources=us, hops=hops, hops_iter=hops_iter, pairs_combined=pairs_combined, exclude = exclude + us, exclude_source=exclude_source, exclude_unpaired=exclude_unpaired, pairs=pairs))
+
+    # generate a binary connectivity matrix that displays number of hops between neuron types
+    @staticmethod
+    def hop_matrix(self, layer_id_skids, source_leftid, destination_leftid, include_start=False):
+        mat = pd.DataFrame(np.zeros(shape = (len(source_leftid), len(destination_leftid))), 
+                            index = source_leftid, 
+                            columns = destination_leftid)
+
+        for index in mat.index:
+            data = layer_id_skids.loc[index, :]
+            for i, hop in enumerate(data):
+                for column in mat.columns:
+                    if(column in hop):
+                        if(include_start==True): # if the source of the hop signal is the first layer
+                            mat.loc[index, column] = i
+                        if(include_start==False): # if the first layer is the first layer downstream of source
+                            mat.loc[index, column] = i+1
+
+
+        max_value = mat.values.max()
+        mat_plotting = mat.copy()
+
+        for index in mat_plotting.index:
+            for column in mat_plotting.columns:
+                if(mat_plotting.loc[index, column]>0):
+                    mat_plotting.loc[index, column] = 1 - (mat_plotting.loc[index, column] - max_value)
+
+        return(mat, mat_plotting)
 
     # use paired edgelist [e.g. ad_edges = pd.read_csv('data/edges_threshold/ad_all-paired-edges.csv', index_col=0)]
     @staticmethod
