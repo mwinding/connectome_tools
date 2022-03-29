@@ -1035,7 +1035,7 @@ class Promat():
 
     # generate a binary connectivity matrix that displays number of hops between neuron types
     @staticmethod
-    def hop_matrix(self, layer_id_skids, source_leftid, destination_leftid, include_start=False):
+    def hop_matrix(layer_id_skids, source_leftid, destination_leftid, include_start=False):
         mat = pd.DataFrame(np.zeros(shape = (len(source_leftid), len(destination_leftid))), 
                             index = source_leftid, 
                             columns = destination_leftid)
