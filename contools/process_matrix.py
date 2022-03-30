@@ -758,7 +758,7 @@ class Promat():
             nonpaired_pair_id = list(nonpaired.nonpaired)
             pair_ids = pairs_pair_id + nonpaired_pair_id
 
-            return(pairs, unpaired, nonpaired, pair_ids)
+            return(pair_ids)
 
     # loads neurons pairs from selected pymaid annotation
     @staticmethod
@@ -1036,7 +1036,7 @@ class Promat():
     # generate a binary connectivity matrix that displays number of hops between neuron types
     @staticmethod
     def hop_matrix(layer_id_skids, source_leftid, destination_leftid, include_start=False):
-        mat = pd.DataFrame(np.zeros(shape = (len(source_leftid), len(destination_leftid))), 
+        mat = pd.DataFrame(np.zeros(shape = (len(source_leftid), len(destination_leftid))),
                             index = source_leftid, 
                             columns = destination_leftid)
 
