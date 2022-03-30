@@ -972,6 +972,7 @@ class Promat():
         if(pairs_combined):
             id1 = 'upstream_pair_id'
             id2 = 'downstream_pair_id'
+            exclude_unpaired = False #if using paired edge list (uses pair_id / leftid only), all paired neurons are considered 'unpaired'
         if(pairs_combined==False):
             id1 = 'upstream_skid'
             id2 = 'downstream_skid'
