@@ -935,12 +935,15 @@ class Promat():
         return()
 
     @staticmethod
-    def pull_adj(type_adj, date, subgraph=0): #subgraph is annot string or list of annotations for neurons to be included in the adj
+    def pull_adj(type_adj, date, subgraph=False): #subgraph is annot string or list of annotations for neurons to be included in the adj
 
         adj = pd.read_csv(f'data/adj/{type_adj}_{date}.csv', index_col = 0).rename(columns=int)
         
-        if((type(subgraph)==str) | (type(subgraph)==list)):
-            subgraph = pymaid.get_skids_by_annotation(subgraph)
+        if(subgraph!=False):
+            # if subgraph is str of list of str, assume they are annotations
+            if((type(subgraph)==str) | ((type(subgraph)==list)&(type(subgraph[0])==str))):
+                subgraph = pymaid.get_skids_by_annotation(subgraph)
+
             adj = adj.loc[np.intersect1d(adj.index, subgraph), np.intersect1d(adj.index, subgraph)]
 
             not_in_matrix = list(np.setdiff1d(subgraph, adj.index))
