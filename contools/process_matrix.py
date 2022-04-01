@@ -623,7 +623,7 @@ class Promat():
         return(pairs)
 
     # returns all skids in left or right side of the brain, depending on whether side = 'left' or 'right'
-    def get_hemis(left_annot, right_annot, side=None, flip_weirdos=True):
+    def get_hemis(left_annot, right_annot, side=None, flip_weirdos=True, neurons_to_flip=None):
         left = pymaid.get_skids_by_annotation(left_annot)
         right = pymaid.get_skids_by_annotation(right_annot)
 
@@ -632,6 +632,11 @@ class Promat():
             neurons_to_flip = np.intersect1d(pymaid.get_skids_by_annotation('mw contralateral axon'), pymaid.get_skids_by_annotation('mw contralateral dendrite'))
             neurons_to_flip_left = [skid for skid in neurons_to_flip if skid in left]
             neurons_to_flip_right = [skid for skid in neurons_to_flip if skid in right]
+
+            # add user-defined neurons to flip lists
+            if(neurons_to_flip!=None):
+                neurons_to_flip_left = neurons_to_flip_left + [skid for skid in neurons_to_flip if (skid in left)]
+                neurons_to_flip_right = neurons_to_flip_right + [skid for skid in neurons_to_flip if (skid in right)]
 
             # removing neurons_to_flip and adding to the other side
             left = list(np.setdiff1d(left, neurons_to_flip_left)) + neurons_to_flip_right
