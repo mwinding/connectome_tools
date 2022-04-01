@@ -8,11 +8,10 @@ from joblib import Parallel, delayed
 from tqdm import tqdm
 
 class Cascade_Analyzer:
-    def __init__(self, name, hit_hist, n_init, pairs, pairwise=False, skids_in_hit_hist=True, adj_index=None): # changed mg to adj_index for custom/modified adj matrices
+    def __init__(self, name, hit_hist, n_init, pairs=[], pairwise=False, skids_in_hit_hist=True, adj_index=None): # changed mg to adj_index for custom/modified adj matrices
         self.hit_hist = hit_hist
         self.name = name
         self.n_init = n_init
-        self.pairs = pairs
 
         if(skids_in_hit_hist):
             self.adj_index = hit_hist.index
@@ -23,6 +22,7 @@ class Cascade_Analyzer:
             self.skid_hit_hist = pd.DataFrame(hit_hist, index = self.adj_index) # convert indices to skids
 
         if(pairwise):
+            self.pairs = pairs
             self.hh_inter = self.interlaced_hit_hist()
             self.hh_pairwise = self.average_pairwise_hit_hist()
 
