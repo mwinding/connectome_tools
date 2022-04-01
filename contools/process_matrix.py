@@ -634,7 +634,7 @@ class Promat():
             neurons_to_flip_right = [skid for skid in neurons_to_flip if skid in right]
 
             # add user-defined neurons to flip lists
-            if(neurons_to_flip!=None):
+            if((type(neurons_to_flip)==int) | (type(neurons_to_flip)==list)):
                 neurons_to_flip_left = neurons_to_flip_left + [skid for skid in neurons_to_flip if (skid in left)]
                 neurons_to_flip_right = neurons_to_flip_right + [skid for skid in neurons_to_flip if (skid in right)]
 
