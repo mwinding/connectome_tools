@@ -628,7 +628,7 @@ class Promat():
         right = pymaid.get_skids_by_annotation(right_annot)
 
         # add user-defined neurons to flip lists
-        if((type(selected_to_flip)==int) | (type(selected_to_flip)==list)):
+        if((type(neurons_to_flip)==int) | (type(neurons_to_flip)==list)):
             
             # splitting to_flip lists into left and right
             neurons_to_flip_left = [skid for skid in neurons_to_flip if skid in left]
