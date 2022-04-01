@@ -175,7 +175,7 @@ class Cascade_Analyzer:
         return(cdispatch.multistart(start_nodes=start_nodes, disable=disable_tqdm))
 
     @staticmethod
-    def run_cascades_parallel(source_skids_list, source_names, stop_skids, adj, p, max_hops, n_init, simultaneous, disable_tqdm=True):
+    def run_cascades_parallel(source_skids_list, source_names, stop_skids, adj, p, max_hops, n_init, simultaneous, pairs=[], pairwise=False, disable_tqdm=True):
         # adj format must be pd.DataFrame with skids for index/columns
 
         source_indices_list = []
@@ -198,7 +198,7 @@ class Cascade_Analyzer:
         )
 
         job = Parallel(n_jobs=-1)(delayed(Cascade_Analyzer.run_cascade)(source_indices_list[i], cdispatch, disable_tqdm=disable_tqdm) for i in tqdm(range(0, len(source_indices_list))))
-        data = [Cascade_Analyzer(name=source_names[i], hit_hist=hit_hist, n_init=n_init, skids_in_hit_hist=False, adj_index=adj.index) for i, hit_hist in enumerate(job)]
+        data = [Cascade_Analyzer(name=source_names[i], hit_hist=hit_hist, n_init=n_init, skids_in_hit_hist=False, adj_index=adj.index, pairs=pairs, pairwise=pairwise) for i, hit_hist in enumerate(job)]
         return(data)
 
     @staticmethod
