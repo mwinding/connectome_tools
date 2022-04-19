@@ -779,9 +779,6 @@ class Promat():
             nonpaired_pair_id = list(pairs[2].nonpaired)
             combined = pairs_pair_id + nonpaired_pair_id
             return(combined)
-        if(return_type not in ['pairs', 'unpaired', 'nonpaired', 'all_pair_ids']):
-            print('Wrong input for return_type! Use one of the following: \'pairs\', \'unpaired\', \'nonpaired\', \'all_pair_ids\'')
-            return()
 
         # include nonpaired neurons and ['leftid', 'rightid'] columns; duplicated leftid/rightid for nonpaired neurons
         if(return_type=='all_pair_ids_bothsides'):
@@ -794,6 +791,10 @@ class Promat():
             combined = pd.DataFrame(zip(combined_left, combined_right), columns=['leftid', 'rightid'])
 
             return(combined)
+
+        if(return_type not in ['pairs', 'unpaired', 'nonpaired', 'all_pair_ids', 'all_pair_ids_bothsides']):
+            print('Wrong input for return_type! Use one of the following: \'pairs\', \'unpaired\', \'nonpaired\', \'all_pair_ids\', \'all_pair_ids_bothsides\'')
+            return()
 
     # loads neurons pairs from selected pymaid annotation
     @staticmethod
