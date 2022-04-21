@@ -1084,11 +1084,9 @@ class Promat():
             else: upstream = []
 
             if(all_paired_skids):
-                downstream = Promat.get_paired_skids(downstream, pairs)
-                downstream = list(downstream.leftid) + list(downstream.rightid)
-                upstream = Promat.get_paired_skids(upstream, pairs)
-                upstream = list(upstream.leftid) + list(upstream.rightid)
-                pair = Promat.get_paired_skids(pairid, pairs)
+                downstream = Promat.get_paired_skids(downstream, pairs, unlist=True)
+                upstream = Promat.get_paired_skids(upstream, pairs, unlist=True)
+                pair = Promat.get_paired_skids(pairid, pairs, unlist=True)
                 data.append([pairid, pair, upstream, downstream])
 
         if(all_paired_skids):
@@ -1096,6 +1094,7 @@ class Promat():
             
         return(df)
 
+    # probably needs work based on bugs found in find_all_partners()
     @staticmethod
     def find_all_partners_hemispheres(pairids, edgelist, pairs_path, all_paired_skids=True):
         pairs = Promat.get_pairs(pairs_path)
