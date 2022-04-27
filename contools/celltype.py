@@ -286,11 +286,11 @@ class Celltype_Analyzer:
         for i, key_i in enumerate(celltypes):
             for j, key_j in enumerate(celltypes):
                 if(normalize_pre_num==False & normalize_post_num==False):
-                    mat[i, j] = adj_df.loc[key_i, key_j].values.sum()
+                    mat[i, j] = adj_df.loc[np.intersect1d(adj_df.index, key_i), np.intersect1d(adj_df.index, key_j)].values.sum()
                 if(normalize_pre_num==True):
-                    mat[i, j] = adj_df.loc[key_i, key_j].values.sum()/len(key_i)
+                    mat[i, j] = adj_df.loc[np.intersect1d(adj_df.index, key_i), np.intersect1d(adj_df.index, key_j)].values.sum()/len(key_i)
                 if(normalize_post_num==True):
-                    mat[i, j] = adj_df.loc[key_i, key_j].values.sum()/len(key_j)
+                    mat[i, j] = adj_df.loc[np.intersect1d(adj_df.index, key_i), np.intersect1d(adj_df.index, key_j)].values.sum()/len(key_j)
         mat = pd.DataFrame(mat, index = celltype_names, columns = celltype_names)
         return(mat)
 
