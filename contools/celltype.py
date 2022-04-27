@@ -288,9 +288,9 @@ class Celltype_Analyzer:
                 if(normalize_pre_num==False & normalize_post_num==False):
                     mat[i, j] = adj_df.loc[np.intersect1d(adj_df.index, key_i), np.intersect1d(adj_df.index, key_j)].values.sum()
                 if(normalize_pre_num==True):
-                    mat[i, j] = adj_df.loc[np.intersect1d(adj_df.index, key_i), np.intersect1d(adj_df.index, key_j)].values.sum()/len(key_i)
+                    mat[i, j] = adj_df.loc[np.intersect1d(adj_df.index, key_i), np.intersect1d(adj_df.index, key_j)].values.sum()/len(np.intersect1d(adj_df.index, key_i))
                 if(normalize_post_num==True):
-                    mat[i, j] = adj_df.loc[np.intersect1d(adj_df.index, key_i), np.intersect1d(adj_df.index, key_j)].values.sum()/len(key_j)
+                    mat[i, j] = adj_df.loc[np.intersect1d(adj_df.index, key_i), np.intersect1d(adj_df.index, key_j)].values.sum()/len(np.intersect1d(adj_df.index, key_j))
         mat = pd.DataFrame(mat, index = celltype_names, columns = celltype_names)
         return(mat)
 
