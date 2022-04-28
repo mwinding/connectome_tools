@@ -937,9 +937,9 @@ class Promat():
         return()
 
     @staticmethod
-    def pull_adj(type_adj, date, subgraph=False): #subgraph is annot string or list of annotations for neurons to be included in the adj
+    def pull_adj(type_adj, data_date, subgraph=False): #subgraph is annot string or list of annotations for neurons to be included in the adj
 
-        adj = pd.read_csv(f'data/adj/{type_adj}_{date}.csv', index_col = 0).rename(columns=int)
+        adj = pd.read_csv(f'data/adj/{type_adj}_{data_date}.csv', index_col = 0).rename(columns=int)
         
         if(subgraph!=False):
             # if subgraph is str of list of str, assume they are annotations
