@@ -294,6 +294,28 @@ class Celltype_Analyzer:
         mat = pd.DataFrame(mat, index = celltype_names, columns = celltype_names)
         return(mat)
 
+    def connection_prob(self, edges, edges_pairs):
+
+        celltypes = [x.get_skids() for x in self.Celltypes]
+        celltype_names = [x.get_name() for x in self.Celltypes]
+        mat = np.zeros((len(celltypes), len(celltypes)))
+
+        for i, celltype1 in enumerate(celltypes):
+            for j, celltype2 in enumerate(celltypes):
+                connection = []
+                pair_type1 = Promat.extract_pairs_from_list(celltype1.skids, pairs, return_pair_ids=True)
+                pair_type2 = Promat.extract_pairs_from_list(celltype2.skids, pairs, return_pair_ids=True)
+
+                for skid1 in pair_type1:
+                    for skid2 in pair_type2:
+                        if(sum((edges_pairs.upstream_pair_id==key_i) & (edges_pairs.downstream_pair_id==key_j))>=1): connection.append(1)
+                        else: connection.append(0)
+
+                    mat[i, j] = sum(connection)/len(connection)
+        
+        df = pd.DataFrame(mat, columns = celltype_names, index = celltype_names)
+        return(df)
+
     def upset_members(self, threshold=0, path=None, plot_upset=False, show_counts_bool=True, exclude_singletons_from_threshold=False, threshold_dual_cats=None, exclude_skids=None):
 
         celltypes = self.Celltypes
