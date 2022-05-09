@@ -12,7 +12,10 @@ import itertools
 from upsetplot import plot
 from upsetplot import from_contents
 from upsetplot import from_memberships
-from contools import Cascade_Analyzer, Analyze_Nx_G, Promat
+from contools.cascade_analysis import Cascade_Analyzer
+from contools.process_matrix import Promat
+from contools.process_graph import Analyze_Nx_G
+
 import navis
 
 class Celltype:
