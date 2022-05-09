@@ -8,12 +8,11 @@ import pymaid
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 import itertools
-from contools.process_matrix import Promat
 
 from upsetplot import plot
 from upsetplot import from_contents
 from upsetplot import from_memberships
-from contools.cascade_analysis import Cascade_Analyzer
+from contools import Cascade_Analyzer, Analyze_Nx_G, Promat
 import navis
 
 class Celltype:
@@ -296,22 +295,38 @@ class Celltype_Analyzer:
 
     # determine connectivity probability between groups of neurons (using self.Celltypes)
     # must provide paired edge list from Promat.pull_edges(pairs_combined=True) and pairs from Promat.get_pairs()
-    def connection_prob(self, edges_paired, pairs):
+    def connection_prob(self, edges, pairs=[], pairs_combined=True):
 
         celltypes = [x.get_skids() for x in self.Celltypes]
         celltype_names = [x.get_name() for x in self.Celltypes]
         mat = np.zeros((len(celltypes), len(celltypes)))
 
-        for i, celltype1 in enumerate(celltypes):
-            for j, celltype2 in enumerate(celltypes):
-                connection = []
-                pair_type1 = Promat.extract_pairs_from_list(celltype1, pairs, return_pair_ids=True)
-                pair_type2 = Promat.extract_pairs_from_list(celltype2, pairs, return_pair_ids=True)
 
-                for skid1 in pair_type1:
-                    for skid2 in pair_type2:
-                        if(sum((edges_paired.upstream_pair_id==skid1) & (edges_paired.downstream_pair_id==skid2))>=1): connection.append(1)
-                        else: connection.append(0)
+        if(pairs_combined):
+            graph = Analyze_Nx_G(edges=edges, graph_type='directed', split_pairs=False)
+            for i, celltype1 in enumerate(celltypes):
+                for j, celltype2 in enumerate(celltypes):
+                    connection = []
+                    celltype1 = Promat.extract_pairs_from_list(celltype1, pairs, return_pair_ids=True)
+                    celltype2 = Promat.extract_pairs_from_list(celltype2, pairs, return_pair_ids=True)
+
+                    for skid1 in celltype1:
+                        for skid2 in celltype2:
+                            if((skid1, skid2) in graph.G.edges): connection.append(1)
+                            if((skid1, skid2) not in graph.G.edges): connection.append(0)
+
+                    mat[i, j] = sum(connection)/len(connection)
+
+        if(pairs_combined==False):
+            graph = Analyze_Nx_G(edges=edges, graph_type='directed', split_pairs=True)
+            for i, celltype1 in enumerate(celltypes):
+                for j, celltype2 in enumerate(celltypes):
+                    connection = []
+
+                    for skid1 in celltype1:
+                        for skid2 in celltype2:
+                            if((skid1, skid2) in graph.G.edges): connection.append(1)
+                            if((skid1, skid2) not in graph.G.edges): connection.append(0)
 
                     mat[i, j] = sum(connection)/len(connection)
         
