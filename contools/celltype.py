@@ -305,8 +305,8 @@ class Celltype_Analyzer:
         for i, celltype1 in enumerate(celltypes):
             for j, celltype2 in enumerate(celltypes):
                 connection = []
-                pair_type1 = Promat.extract_pairs_from_list(celltype1.skids, pairs, return_pair_ids=True)
-                pair_type2 = Promat.extract_pairs_from_list(celltype2.skids, pairs, return_pair_ids=True)
+                pair_type1 = Promat.extract_pairs_from_list(celltype1, pairs, return_pair_ids=True)
+                pair_type2 = Promat.extract_pairs_from_list(celltype2, pairs, return_pair_ids=True)
 
                 for skid1 in pair_type1:
                     for skid2 in pair_type2:
