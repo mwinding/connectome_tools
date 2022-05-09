@@ -294,7 +294,9 @@ class Celltype_Analyzer:
         mat = pd.DataFrame(mat, index = celltype_names, columns = celltype_names)
         return(mat)
 
-    def connection_prob(self, edges, edges_pairs):
+    # determine connectivity probability between groups of neurons (using self.Celltypes)
+    # must provide paired edge list from Promat.pull_edges(pairs_combined=True) and pairs from Promat.get_pairs()
+    def connection_prob(self, edges_paired, pairs):
 
         celltypes = [x.get_skids() for x in self.Celltypes]
         celltype_names = [x.get_name() for x in self.Celltypes]
@@ -308,7 +310,7 @@ class Celltype_Analyzer:
 
                 for skid1 in pair_type1:
                     for skid2 in pair_type2:
-                        if(sum((edges_pairs.upstream_pair_id==key_i) & (edges_pairs.downstream_pair_id==key_j))>=1): connection.append(1)
+                        if(sum((edges_paired.upstream_pair_id==skid1) & (edges_paired.downstream_pair_id==skid2))>=1): connection.append(1)
                         else: connection.append(0)
 
                     mat[i, j] = sum(connection)/len(connection)
