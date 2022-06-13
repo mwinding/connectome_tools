@@ -763,7 +763,7 @@ class Promat():
 
     # loads neurons pairs from selected pymaid annotation
     @staticmethod
-    def load_pairs_from_annotation(annot, pairList, return_type='pairs', skids=None, use_skids=False):
+    def load_pairs_from_annotation(annot, pairList, return_type='all_pair_ids_bothsides', skids=None, use_skids=False):
         if(use_skids==False):
             skids = pymaid.get_skids_by_annotation(annot)
             
