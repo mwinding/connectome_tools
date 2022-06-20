@@ -420,7 +420,7 @@ class Celltype_Analyzer:
         plt.show()
 
     @staticmethod
-    def get_skids_from_meta_meta_annotation(meta_meta, split=False):
+    def get_skids_from_meta_meta_annotation(meta_meta, split=False, return_celltypes=False):
         meta_annots = pymaid.get_annotated(meta_meta).name
         annot_list = [list(pymaid.get_annotated(meta).name) for meta in meta_annots]
         skids = [list(pymaid.get_skids_by_annotation(annots)) for annots in annot_list]
@@ -428,7 +428,11 @@ class Celltype_Analyzer:
             skids = [x for sublist in skids for x in sublist]
             return(skids)
         if(split==True):
-            return(skids, meta_annots)
+            if(return_celltypes==True):
+                celltypes = [Celltype(meta_annots[i], skids[i]) for i in range(len(meta_annots))]
+                return(celltypes)
+            if(return_celltypes==False):
+                return(skids, meta_annots)
 
     @staticmethod
     def get_skids_from_meta_annotation(meta, split=False, unique=True, return_celltypes=False):
