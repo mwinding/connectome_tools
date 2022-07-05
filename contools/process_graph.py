@@ -186,7 +186,7 @@ class Analyze_Nx_G():
                 if(rightid in loop_partners): partner_loop.append(1)
                 if(rightid not in loop_partners): partner_loop.append(0)
 
-                for skid in pairs.rightid.values: #something looks funny here, does this double-count the real partner?
+                for skid in list(np.setdiff1d(pairs.rightid.values, rightid)):
                     if(skid in loop_partners): nonpartner_loop.append(1)
                     if(skid not in loop_partners): nonpartner_loop.append(0)
                     
