@@ -210,7 +210,7 @@ def flatten_muligraph(multigraph, meta_data_dict):
     return g
 
 
-def adj_split_axons_dendrites(all_neurons, split_tag, special_split_tags, not_split_skids):
+def adj_split_axons_dendrites(all_neurons, split_tag, special_split_tags, not_split_skids, data_date=None):
     # user must login to CATMAID instance before starting
 
     t0 = time.time()
@@ -218,6 +218,9 @@ def adj_split_axons_dendrites(all_neurons, split_tag, special_split_tags, not_sp
     # find today's date and make an output folder with that name
     today = date.today()
     today = date.strftime(today, '%Y-%m-%d')
+
+    if(data_date!=None): # to override current date
+        today = data_date
 
     output_path = Path(f"data/processed/{today}")
     if not os.path.isdir(output_path):
