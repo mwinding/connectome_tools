@@ -953,6 +953,13 @@ class Promat():
                 print('Not all skids are in adjacency matrix!')
                 print(f'Check: {not_in_matrix}')
 
+        # make sure the adj is properly sorted
+        sorted_index = adj_all.sort_index().index
+        adj = adj.loc[sorted_index, sorted_index]
+
+        # convert all to float
+        adj = adj.astype(float)
+
         return(adj)
 
     def pull_edges(type_edges, threshold, data_date, pairs_combined, synapse_threshold=False, select_neurons=[]):
