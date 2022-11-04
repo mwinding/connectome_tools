@@ -528,7 +528,7 @@ def adj_split_axons_dendrites(all_neurons, split_tag, special_split_tags, not_sp
 
     sys.stdout.close()
 
-def edge_thresholds(path, threshold, left_annot, right_annot, pairs, fraction_input=True, date = date.strftime(date.today(), '%Y-%m-%d') ): # default assumes data is from today
+def edge_thresholds(path, threshold, left_annot, right_annot, pairs, fraction_input=True, date = date.strftime(date.today(), '%Y-%m-%d'), strict=False): # default assumes data is from today
 # threshold units are in %input on dendrite or axon
 
     adj_all = pd.read_csv(f'{path}/all-all_{date}.csv', index_col = 0).rename(columns=int)
@@ -561,7 +561,7 @@ def edge_thresholds(path, threshold, left_annot, right_annot, pairs, fraction_in
         matrix_nonpaired = list(matrix_pairs[2].nonpaired) # add in nonpaired neurons (including center neurons)
         all_sources = list(matrix_pairs[0].leftid) + matrix_nonpaired
 
-        all_edges_combined = adj_mat.threshold_edge_list(all_sources, threshold, left, right) # currently generates edge list for all paired -> paired/nonpaired, nonpaired -> paired/nonpaired
+        all_edges_combined = adj_mat.threshold_edge_list(all_sources, threshold, left, right, strict=False) # currently generates edge list for all paired -> paired/nonpaired, nonpaired -> paired/nonpaired
         all_edges_split = adj_mat.split_paired_edges(all_edges_combined, left, right)
         
         if(fraction_input==True):
