@@ -475,9 +475,9 @@ def adj_split_axons_dendrites(all_neurons, split_tag, special_split_tags, not_sp
     # add back in skids with no edges (with rows/columns of 0); simplifies some later analysis
     def refill_adjs(adj, adj_all):
         skids_diff = np.setdiff1d(adj_all.index, adj.index)
-        adj = adj.append(pd.DataFrame([[0]*adj.shape[1]]*len(skids_diff), index = skids_diff, columns = adj.columns)) # add in rows with 0s
+        adj = adj.append(pd.DataFrame([[0.0]*adj.shape[1]]*len(skids_diff), index = skids_diff, columns = adj.columns)) # add in rows with 0s
         for skid in skids_diff:
-            adj[skid]=[0]*len(adj.index)
+            adj[skid]=[0.0]*len(adj.index)
         return(adj)
 
     adj_ad = refill_adjs(adj_ad, adj_all)
@@ -491,6 +491,14 @@ def adj_split_axons_dendrites(all_neurons, split_tag, special_split_tags, not_sp
     adj_aa.columns = adj_aa.columns.astype(int)
     adj_da.columns = adj_da.columns.astype(int)
     adj_dd.columns = adj_dd.columns.astype(int)
+
+    # sort adjs the same way
+    sorted_index = adj_all.sort_index().index
+    adj_all = adj_all.loc[sorted_index, sorted_index]
+    adj_ad = adj_ad.loc[sorted_index, sorted_index]
+    adj_aa = adj_aa.loc[sorted_index, sorted_index]
+    adj_da = adj_da.loc[sorted_index, sorted_index]
+    adj_dd = adj_dd.loc[sorted_index, sorted_index]
 
     # export adjacency matrices
     adj_all.to_csv(f'data/adj/all-all_{today}.csv')
