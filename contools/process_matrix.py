@@ -954,7 +954,7 @@ class Promat():
                 print(f'Check: {not_in_matrix}')
 
         # make sure the adj is properly sorted
-        sorted_index = adj_all.sort_index().index
+        sorted_index = adj.sort_index().index
         adj = adj.loc[sorted_index, sorted_index]
 
         # convert all to float
