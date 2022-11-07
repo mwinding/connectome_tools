@@ -24,6 +24,7 @@ Project Organization
 ├── LICENSE
 ├── README.md
 ├── contools                   <- contains 5 different analysis classes
+│   │
 │   ├── traverse/              <- guts of signal cascade algorithm and others
 │   ├── cascade_analysis.py    <- Cascade_Analyzer(), a class facilitating analysis of signal cascade data
 │   ├── celltype.py            <- Celltype(), a general celltype class containing skeleton IDs, plotting colors, and names
