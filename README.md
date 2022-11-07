@@ -37,5 +37,6 @@ Project Organization
     ├── preparing-data_example.ipynb  <- example of how to generate data from CATMAID in a new project
     ├── cascade_example.ipynb         <- signal cascade example, investigating polysynaptic information flow across a brain
     └── multihop_example.ipynb        <- planned example script
+                                      <- more examples coming, including chromosome plots, marginal cluster plots, etc.
 
 ```
