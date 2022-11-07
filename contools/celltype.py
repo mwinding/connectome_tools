@@ -788,15 +788,15 @@ class Analyze_Cluster():
 
     # cluster_lvl should be integer between 0 and max levels of cluster hierarchy
     # meta_data_path is the path to a meta_data file in 'data/graphs/'; contains cluster and sort information
-    def __init__(self, cluster_lvl, meta_data_path, skids): # default is    skids = pymaid.get_skids_by_annotation('mw brain paper clustered neurons')
-                                                            #               meta_data_path = 'data/graphs/meta_data.csv'
+    def __init__(self, cluster_lvl, meta_data_path, skids, sort='walksort'): # default is skids = pymaid.get_skids_by_annotation('mw brain paper clustered neurons')
+                                                                            # meta_data_path = 'data/graphs/meta_data.csv'
 
         self.meta_data = pd.read_csv(meta_data_path, index_col = 0, header = 0) # load meta_data file
         self.skids = skids
 
         # determine where neurons are in the signal from sensory -> descending neurons
         # determined using iterative random walks
-        self.cluster_order, self.cluster_df = self.cluster_order(cluster_lvl = cluster_lvl)
+        self.cluster_order, self.cluster_df = self.cluster_order(cluster_lvl=cluster_lvl, sort=sort)
         self.cluster_cta = Celltype_Analyzer([Celltype(self.cluster_order[i], skids) for i, skids in enumerate(list(self.cluster_df.skids))])
 
     def cluster_order(self, cluster_lvl, sort='walk_sort'):
