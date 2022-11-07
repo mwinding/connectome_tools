@@ -15,7 +15,7 @@ Classes can be imported as follows:
 ```
 from contools import Prograph, Promat
 from contools import Celltype, Celltype_Analyzer
-from contools import Cascade_Analyzer()
+from contools import Cascade_Analyzer
 ```
 
 Project Organization
