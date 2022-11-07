@@ -5,7 +5,18 @@ tools to analyze connectomics data from a CATMAID instance; includes modified sc
 Installation and setup
 --------
 connectome tools can be installed via pip:
-``pip install git+https://github.com/mwinding/connectome_tools``
+
+```
+pip install git+https://github.com/mwinding/connectome_tools
+```
+
+Classes can be imported as follows:
+
+```
+from contools import Prograph, Promat
+from contools import Celltype, Celltype_Analyzer
+from contools import Cascade_Analyzer()
+```
 
 Project Organization
 ------------
