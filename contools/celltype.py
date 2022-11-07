@@ -809,7 +809,13 @@ class Analyze_Cluster():
         cluster_df = pd.DataFrame(list(meta_data_df.groupby(f'dc_level_{cluster_lvl}_n_components=10_min_split=32')['skid']), columns=['cluster', 'skids'])
         cluster_df['skids'] = [x.values for x in cluster_df.skids]
         cluster_df[f'sum_{sort}'] = [np.nanmean(x[1].values) for x in list(meta_data_df.groupby(f'dc_level_{cluster_lvl}_n_components=10_min_split=32')[f'sum_{sort}'])]
-        cluster_df.sort_values(by=f'sum_{sort}', inplace=True)
+        
+        # sort from input to output (signal-flow: [X, -X], walk-sort: [0,1])
+        if(sort=='signal_flow'):
+            cluster_df.sort_values(by=f'sum_{sort}', ascending=False, inplace=True)
+        if(sort=='walk_sort'):
+            cluster_df.sort_values(by=f'sum_{sort}', ascending=True, inplace=True)
+
         cluster_df.reset_index(inplace=True, drop=True)
 
         # returns cluster order and clusters dataframe (with order, skids, sort values)
