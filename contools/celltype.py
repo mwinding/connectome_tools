@@ -799,7 +799,7 @@ class Analyze_Cluster():
         self.cluster_order, self.cluster_df = self.cluster_order(cluster_lvl = cluster_lvl)
         self.cluster_cta = Celltype_Analyzer([Celltype(self.cluster_order[i], skids) for i, skids in enumerate(list(self.cluster_df.skids))])
 
-    def cluster_order(self, cluster_lvl):
+    def cluster_order(self, cluster_lvl, sort='walk_sort'):
 
         brain_clustered = self.skids
 
@@ -808,11 +808,11 @@ class Analyze_Cluster():
 
         cluster_df = pd.DataFrame(list(meta_data_df.groupby(f'dc_level_{cluster_lvl}_n_components=10_min_split=32')['skid']), columns=['cluster', 'skids'])
         cluster_df['skids'] = [x.values for x in cluster_df.skids]
-        cluster_df['sum_walk_sort'] = [np.nanmean(x[1].values) for x in list(meta_data_df.groupby(f'dc_level_{cluster_lvl}_n_components=10_min_split=32')['sum_walk_sort'])]
-        cluster_df.sort_values(by='sum_walk_sort', inplace=True)
+        cluster_df[f'sum_{sort}'] = [np.nanmean(x[1].values) for x in list(meta_data_df.groupby(f'dc_level_{cluster_lvl}_n_components=10_min_split=32')[f'sum_{sort}'])]
+        cluster_df.sort_values(by=f'sum_{sort}', inplace=True)
         cluster_df.reset_index(inplace=True, drop=True)
 
-        # returns cluster order and clusters dataframe (with order, skids, walk_sort values)
+        # returns cluster order and clusters dataframe (with order, skids, sort values)
         return(list(cluster_df.cluster), cluster_df) 
 
     def ff_fb_cascades(self, adj, p, max_hops, n_init):
