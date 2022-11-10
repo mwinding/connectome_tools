@@ -666,7 +666,7 @@ class Celltype_Analyzer:
             upstream_ct.plot_memberships(path=path + '-upstream.pdf', figsize=(col_width*len(upstream_ct.Celltypes),col_height), ylim=(0,1))
             downstream_ct.plot_memberships(path=path + '-downstream.pdf', figsize=(col_width*len(downstream_ct.Celltypes),col_height), ylim=(0,1))
 
-    
+    # work on this one
     @staticmethod
     def plot_marginal_cell_type_cluster(size, particular_cell_type, particular_color, cluster_level, path, all_celltypes=None):
 
@@ -711,28 +711,6 @@ class Celltype_Analyzer:
         ax.axis('off')
 
         plt.savefig(path, format='pdf', bbox_inches='tight')
-
-def plot_cell_types_cluster(lvl_labels, path):
-
-    _, all_celltypes = Celltype_Analyzer.default_celltypes()
-    lvl = Analyze_Cluster('cascades/data/meta-method=color_iso-d=8-bic_ratio=0.95-min_split=32.csv', 'data/meta_data_w_order.csv', lvl_labels)
-
-    all_clusters = [Celltype(lvl.clusters.cluster[i], lvl.clusters.skids[i]) for i in range(0, len(lvl.clusters))]
-    cluster_analyze = Celltype_Analyzer(all_clusters)
-
-    cluster_analyze.set_known_types(all_celltypes)
-    celltype_colors = [x.get_color() for x in cluster_analyze.get_known_types()]
-    memberships = cluster_analyze.memberships()
-    memberships = memberships.iloc[[0,1,2,3,4,5,6,7,8,9,10,11,15,12,13,14], :]
-    celltype_colors = [celltype_colors[i] for i in [0,1,2,3,4,5,6,7,8,9,10,11,15,12,13,14]]
-
-    ind = np.arange(0, len(cluster_analyze.Celltypes))
-    plt.bar(ind, memberships.iloc[0, :], color=celltype_colors[0])
-    bottom = memberships.iloc[0, :]
-    for i in range(1, len(memberships.index)):
-        plt.bar(ind, memberships.iloc[i, :], bottom = bottom, color=celltype_colors[i])
-        bottom = bottom + memberships.iloc[i, :]
-    plt.savefig(path, format='pdf', bbox_inches='tight')
 
 def plot_celltype(path, pairids, n_rows, n_cols, celltypes, pairs_path, plot_pairs=True, connectors=False, cn_size=0.25, color=None, names=False, plot_padding=[0,0]):
 
@@ -844,4 +822,23 @@ class Analyze_Cluster():
         ff_fb_df.drop(columns='neuropil', inplace=True)
         ff_fb_df.columns = self.cluster_order
         ff_fb_df.index = self.cluster_order
-        return(ff_fb_df)    
+        return(ff_fb_df)
+
+    def plot_cell_types_cluster(self, path):
+
+        _, all_celltypes = Celltype_Analyzer.default_celltypes()
+        clusters_cta = self.cluster_cta
+
+        clusters_cta.set_known_types(all_celltypes)
+        celltype_colors = [x.get_color() for x in clusters_cta.get_known_types()]
+        memberships = clusters_cta.memberships()
+        memberships = memberships.iloc[[0,1,2,3,4,5,6,7,8,9,10,11,12,17,13,14,15,16], :] # switching order so unknown is not above outputs and RGNs before pre-outputs
+        celltype_colors = [celltype_colors[i] for i in [0,1,2,3,4,5,6,7,8,9,10,11,12,17,13,14,15,16]] # switching order so unknown is not above outputs and RGNs before pre-outputs
+
+        ind = np.arange(0, len(clusters_cta.Celltypes))
+        plt.bar(ind, memberships.iloc[0, :], color=celltype_colors[0])
+        bottom = memberships.iloc[0, :]
+        for i in range(1, len(memberships.index)):
+            plt.bar(ind, memberships.iloc[i, :], bottom = bottom, color=celltype_colors[i])
+            bottom = bottom + memberships.iloc[i, :]
+        plt.savefig(path, format='pdf', bbox_inches='tight')    
