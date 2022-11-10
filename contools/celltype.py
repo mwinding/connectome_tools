@@ -666,6 +666,51 @@ class Celltype_Analyzer:
             upstream_ct.plot_memberships(path=path + '-upstream.pdf', figsize=(col_width*len(upstream_ct.Celltypes),col_height), ylim=(0,1))
             downstream_ct.plot_memberships(path=path + '-downstream.pdf', figsize=(col_width*len(downstream_ct.Celltypes),col_height), ylim=(0,1))
 
+    
+    @staticmethod
+    def plot_marginal_cell_type_cluster(size, particular_cell_type, particular_color, cluster_level, path, all_celltypes=None):
+
+        # all cell types plot data
+        if(all_celltypes==None):
+            _, all_celltypes = Celltype_Analyzer.default_celltypes()
+            
+        clusters = Analyze_Cluster(cluster_lvl=cluster_level)
+
+        #all_clusters = [Celltype(lvl.cluster_df.cluster[i], lvl.cluster_df.skids[i]) for i in range(0, len(lvl.clusters))]
+        cluster_analyze = clusters.cluster_cta
+
+        cluster_analyze.set_known_types(all_celltypes)
+        celltype_colors = [x.get_color() for x in cluster_analyze.get_known_types()]
+        all_memberships = cluster_analyze.memberships()
+        all_memberships = all_memberships.iloc[[0,1,2,3,4,5,6,7,8,9,10,11,12,17,13,14,15,16], :] # switching order so unknown is not above outputs and RGNs before pre-outputs
+        celltype_colors = [celltype_colors[i] for i in [0,1,2,3,4,5,6,7,8,9,10,11,12,17,13,14,15,16]] # switching order so unknown is not above outputs and RGNs before pre-outputs
+        
+        # particular cell type data
+        cluster_analyze.set_known_types([particular_cell_type])
+        membership = cluster_analyze.memberships()
+
+        # plot
+        fig = plt.figure(figsize=size) 
+        fig.subplots_adjust(hspace=0.1)
+        gs = GridSpec(4, 1)
+
+        ax = fig.add_subplot(gs[0:3, 0])
+        ind = np.arange(0, len(cluster_analyze.Celltypes))
+        ax.bar(ind, membership.iloc[0, :], color=particular_color)
+        ax.set(xlim = (-1, len(ind)), ylim=(0,1), xticks=([]), yticks=([]), title=particular_cell_type.get_name())
+
+        ax = fig.add_subplot(gs[3, 0])
+        ind = np.arange(0, len(cluster_analyze.Celltypes))
+        ax.bar(ind, all_memberships.iloc[0, :], color=celltype_colors[0])
+        bottom = all_memberships.iloc[0, :]
+        for i in range(1, len(all_memberships.index)):
+            plt.bar(ind, all_memberships.iloc[i, :], bottom = bottom, color=celltype_colors[i])
+            bottom = bottom + all_memberships.iloc[i, :]
+        ax.set(xlim = (-1, len(ind)), ylim=(0,1), xticks=([]), yticks=([]))
+        ax.axis('off')
+        ax.axis('off')
+
+        plt.savefig(path, format='pdf', bbox_inches='tight')
 
 def plot_cell_types_cluster(lvl_labels, path):
 
@@ -687,50 +732,6 @@ def plot_cell_types_cluster(lvl_labels, path):
     for i in range(1, len(memberships.index)):
         plt.bar(ind, memberships.iloc[i, :], bottom = bottom, color=celltype_colors[i])
         bottom = bottom + memberships.iloc[i, :]
-    plt.savefig(path, format='pdf', bbox_inches='tight')
-
-def plot_marginal_cell_type_cluster(size, particular_cell_type, particular_color, cluster_level, path, all_celltypes=None):
-
-    # all cell types plot data
-    if(all_celltypes==None):
-        _, all_celltypes = Celltype_Analyzer.default_celltypes()
-        
-    clusters = Analyze_Cluster(cluster_lvl=cluster_level)
-
-    #all_clusters = [Celltype(lvl.cluster_df.cluster[i], lvl.cluster_df.skids[i]) for i in range(0, len(lvl.clusters))]
-    cluster_analyze = clusters.cluster_cta
-
-    cluster_analyze.set_known_types(all_celltypes)
-    celltype_colors = [x.get_color() for x in cluster_analyze.get_known_types()]
-    all_memberships = cluster_analyze.memberships()
-    all_memberships = all_memberships.iloc[[0,1,2,3,4,5,6,7,8,9,10,11,12,17,13,14,15,16], :] # switching order so unknown is not above outputs and RGNs before pre-outputs
-    celltype_colors = [celltype_colors[i] for i in [0,1,2,3,4,5,6,7,8,9,10,11,12,17,13,14,15,16]] # switching order so unknown is not above outputs and RGNs before pre-outputs
-    
-    # particular cell type data
-    cluster_analyze.set_known_types([particular_cell_type])
-    membership = cluster_analyze.memberships()
-
-    # plot
-    fig = plt.figure(figsize=size) 
-    fig.subplots_adjust(hspace=0.1)
-    gs = GridSpec(4, 1)
-
-    ax = fig.add_subplot(gs[0:3, 0])
-    ind = np.arange(0, len(cluster_analyze.Celltypes))
-    ax.bar(ind, membership.iloc[0, :], color=particular_color)
-    ax.set(xlim = (-1, len(ind)), ylim=(0,1), xticks=([]), yticks=([]), title=particular_cell_type.get_name())
-
-    ax = fig.add_subplot(gs[3, 0])
-    ind = np.arange(0, len(cluster_analyze.Celltypes))
-    ax.bar(ind, all_memberships.iloc[0, :], color=celltype_colors[0])
-    bottom = all_memberships.iloc[0, :]
-    for i in range(1, len(all_memberships.index)):
-        plt.bar(ind, all_memberships.iloc[i, :], bottom = bottom, color=celltype_colors[i])
-        bottom = bottom + all_memberships.iloc[i, :]
-    ax.set(xlim = (-1, len(ind)), ylim=(0,1), xticks=([]), yticks=([]))
-    ax.axis('off')
-    ax.axis('off')
-
     plt.savefig(path, format='pdf', bbox_inches='tight')
 
 def plot_celltype(path, pairids, n_rows, n_cols, celltypes, pairs_path, plot_pairs=True, connectors=False, cn_size=0.25, color=None, names=False, plot_padding=[0,0]):
