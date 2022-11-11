@@ -666,15 +666,17 @@ class Celltype_Analyzer:
             upstream_ct.plot_memberships(path=path + '-upstream.pdf', figsize=(col_width*len(upstream_ct.Celltypes),col_height), ylim=(0,1))
             downstream_ct.plot_memberships(path=path + '-downstream.pdf', figsize=(col_width*len(downstream_ct.Celltypes),col_height), ylim=(0,1))
 
-    # work on this one
     @staticmethod
     def plot_marginal_cell_type_cluster(size, particular_cell_type, particular_color, cluster_level, path, all_celltypes=None):
 
         # all cell types plot data
         if(all_celltypes==None):
             _, all_celltypes = Celltype_Analyzer.default_celltypes()
-            
-        clusters = Analyze_Cluster(cluster_lvl=cluster_level)
+        
+        all_neurons = pymaid.get_skids_by_annotation(['mw brain and inputs', 'mw brain accessory neurons'])
+        remove_neurons = pymaid.get_skids_by_annotation(['mw brain very incomplete', 'mw partially differentiated', 'mw motor'])
+        all_neurons = list(np.setdiff1d(all_neurons, remove_neurons)) # remove neurons that are incomplete or partially differentiated (as well as SEZ motor neurons)
+        clusters = Analyze_Cluster(cluster_lvl=cluster_level, meta_data_path = 'data/graphs/meta_data.csv', skids=all_neurons)
 
         #all_clusters = [Celltype(lvl.cluster_df.cluster[i], lvl.cluster_df.skids[i]) for i in range(0, len(lvl.clusters))]
         cluster_analyze = clusters.cluster_cta
@@ -824,7 +826,7 @@ class Analyze_Cluster():
         ff_fb_df.index = self.cluster_order
         return(ff_fb_df)
 
-    def plot_cell_types_cluster(self, path):
+    def plot_cell_types_cluster(self, figsize, path):
 
         _, all_celltypes = Celltype_Analyzer.default_celltypes()
         clusters_cta = self.cluster_cta
@@ -836,6 +838,7 @@ class Analyze_Cluster():
         celltype_colors = [celltype_colors[i] for i in [0,1,2,3,4,5,6,7,8,9,10,11,12,17,13,14,15,16]] # switching order so unknown is not above outputs and RGNs before pre-outputs
 
         ind = np.arange(0, len(clusters_cta.Celltypes))
+
         plt.bar(ind, memberships.iloc[0, :], color=celltype_colors[0])
         bottom = memberships.iloc[0, :]
         for i in range(1, len(memberships.index)):
