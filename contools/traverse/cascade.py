@@ -6,7 +6,7 @@ from .traverse import BaseTraverse
 
 def to_transmission_matrix(adj, p, method="uniform", in_weights=None):
 
-    neg_inds = np.where(adj.sum(axis=1))[0] # negative edges indicate inhibitory connections
+    neg_inds = np.where(adj.sum(axis=1)<0)[0] # negative edges indicate inhibitory connections
     adj = adj.copy() 
     adj = np.abs(adj) # convert to positive values for probs calculation
 
