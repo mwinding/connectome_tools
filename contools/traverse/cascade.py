@@ -5,11 +5,20 @@ from .traverse import BaseTraverse
 
 
 def to_transmission_matrix(adj, p, method="uniform", in_weights=None):
+
+    neg_inds = np.where(adj.sum(axis=1))[0] # negative edges indicate inhibitory connections
+    adj = adj.copy() 
+    adj = np.abs(adj) # convert to positive values for probs calculation
+
     if method == "uniform":
         not_probs = (
             1 - p
         ) ** adj  # probability of none of the synapses causing postsynaptic
         probs = 1 - not_probs  # probability of ANY of the synapses firing onto next
+        
+        for i in neg_inds:
+            probs[i] = -probs[i] # restore negative edges
+
     elif method == "input_weighted":
         raise NotImplementedError()
         alpha = p
@@ -52,11 +61,33 @@ class Cascade(BaseTraverse):
 
 
 def generate_cascade_paths(
-    start_ind, probs, depth, stop_inds=[], visited=[], max_depth=10
+    start_ind, all_start_inds, probs, depth, stop_inds=[], visited=[], max_depth=10 # added all_start_inds
 ):
     visited = visited.copy()
     visited.append(start_ind)
-    if (depth < max_depth) and (start_ind not in stop_inds):
+
+    probs = probs.copy()
+    neg_inds = np.where(probs.sum(axis=1)<0)[0] # identify nodes with negative edges
+
+    if (depth < max_depth) and (start_ind not in stop_inds) and (start_ind not in neg_inds): # transmission not allowed through negative edges
+
+        neg_inds_active = np.intersect1d(all_start_inds, neg_inds) # identify active inhibitory nodes
+        if(len(neg_inds_active)>0):
+
+            # sum all activate negative edges if multiple activate negative nodes
+            if(len(np.shape(probs[neg_inds]))>1):
+                summed_neg = probs[neg_inds_active].sum(axis=0) 
+                probs[start_ind] = probs[start_ind] + summed_neg # reduce probability of activating positive edges by magnitude of sum of negative edges
+
+            # if only one activate negative node
+            else:
+                probs[start_ind] = probs[start_ind] + probs[neg_inds_active] # reduce probability of activating positive edges by magnitude of negative edges
+        
+        # where the probabilistic signal transmission occurs
+
+        # probs must be positive, so all negative values are converted to zero
+        probs[probs<0] = 0
+
         transmission_indicator = np.random.binomial(
             np.ones(len(probs), dtype=int), probs[start_ind]
         )
