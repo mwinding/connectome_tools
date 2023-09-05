@@ -13,4 +13,7 @@ data_settings.py
 # file management from macOS
 .DS_Store
 
+# vscode settings
+.vscode
+
 __pycache__
