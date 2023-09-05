@@ -133,6 +133,7 @@ class BaseTraverse:
         else:
             return True
 
+    # maybe not going to be used
     def _not_neg(self):
         if self._active not in self.neg_inds:
             return True
@@ -140,7 +141,7 @@ class BaseTraverse:
             return False
 
     def _check_stop_conditions(self):
-        check_items = [self._check_max_hops(), self._check_visited(), self._not_neg()]
+        check_items = [self._check_max_hops(), self._check_visited()]
         return all(check_items)
 
     def _reset(self):
