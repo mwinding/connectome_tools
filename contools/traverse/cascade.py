@@ -43,7 +43,7 @@ class Cascade(BaseTraverse):
         if(len(neg_inds_active)>0):
 
             # sum all activate negative edges if multiple activate negative nodes
-            if(len(np.shape(node_transition_probs[neg_inds]))>1):
+            if(len(np.shape(node_transition_probs[neg_inds_active]))>1):
                 summed_neg = node_transition_probs[neg_inds_active].sum(axis=0) 
                 node_transition_probs[self._active] = node_transition_probs[self._active] + summed_neg # reduce probability of activating positive edges by magnitude of sum of negative edges
 
