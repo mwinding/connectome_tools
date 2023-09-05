@@ -18,6 +18,7 @@ def to_transmission_matrix(adj, p, method="uniform", in_weights=None):
         
         for i in neg_inds:
             probs[i] = -probs[i] # restore negative edges
+            probs[probs==-0] = 0 # prevent -0 values
 
     elif method == "input_weighted":
         raise NotImplementedError()
@@ -34,6 +35,26 @@ def to_transmission_matrix(adj, p, method="uniform", in_weights=None):
 class Cascade(BaseTraverse):
     def _choose_next(self):
         node_transition_probs = self.transition_probs[self._active]
+
+        # identify active inhibitory nodes and deduct transition probs from active excitatory nodes
+        all_neg_inds = self.neg_inds
+
+        neg_inds_active = np.intersect1d(self._active, all_neg_inds) # identify active inhibitory nodes
+        if(len(neg_inds_active)>0):
+
+            # sum all activate negative edges if multiple activate negative nodes
+            if(len(np.shape(node_transition_probs[neg_inds]))>1):
+                summed_neg = node_transition_probs[neg_inds_active].sum(axis=0) 
+                node_transition_probs[self._active] = node_transition_probs[self._active] + summed_neg # reduce probability of activating positive edges by magnitude of sum of negative edges
+
+            # if only one activate negative node
+            else:
+                node_transition_probs[self._active] = node_transition_probs[self._active] + node_transition_probs[neg_inds_active] # reduce probability of activating positive edges by magnitude of negative edges
+        
+        # where the probabilistic signal transmission occurs
+        # probs must be positive, so all negative values are converted to zero
+        node_transition_probs[node_transition_probs<0] = 0
+
         transmission_indicator = np.random.binomial(
             np.ones(node_transition_probs.shape, dtype=int), node_transition_probs
         )
@@ -84,7 +105,6 @@ def generate_cascade_paths(
                 probs[start_ind] = probs[start_ind] + probs[neg_inds_active] # reduce probability of activating positive edges by magnitude of negative edges
         
         # where the probabilistic signal transmission occurs
-
         # probs must be positive, so all negative values are converted to zero
         probs[probs<0] = 0
 
@@ -97,6 +117,7 @@ def generate_cascade_paths(
             if i not in visited:
                 next_paths = generate_cascade_paths(
                     i,
+                    next_inds,
                     probs,
                     depth + 1,
                     stop_inds=stop_inds,
