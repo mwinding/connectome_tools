@@ -108,6 +108,7 @@ class BaseTraverse:
         record_traversal : bool, optional
             [description], by default True
         """
+        self.neg_inds = np.where(transition_probs.sum(axis=1)<0)[0]
         self.transition_probs = transition_probs
         self.hit_hist = hit_hist
         self.record_traversal = record_traversal
@@ -131,6 +132,13 @@ class BaseTraverse:
             return self._active not in self._visited
         else:
             return True
+
+    # maybe not going to be used
+    def _not_neg(self):
+        if self._active not in self.neg_inds:
+            return True
+        else:
+            return False
 
     def _check_stop_conditions(self):
         check_items = [self._check_max_hops(), self._check_visited()]

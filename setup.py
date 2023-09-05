@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(name='contools',
-      version='1.0',
+      version='2.0.0',
       description='tools for analyzing connectomics data from CATMAID instances',
       url='http://github.com/mwinding/connectome_tools',
       author='Michael Winding',
