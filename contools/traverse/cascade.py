@@ -34,7 +34,7 @@ def to_transmission_matrix(adj, p, method="uniform", in_weights=None):
 
 class Cascade(BaseTraverse):
     def _choose_next(self):
-        node_transition_probs = self.transition_probs[self._active]
+        node_transition_probs = self.transition_probs#[self._active]
 
         # identify active inhibitory nodes and deduct transition probs from active excitatory nodes
         all_neg_inds = self.neg_inds
@@ -54,6 +54,10 @@ class Cascade(BaseTraverse):
         # where the probabilistic signal transmission occurs
         # probs must be positive, so all negative values are converted to zero
         node_transition_probs[node_transition_probs<0] = 0
+
+        # identify active excitatory nodes, use only those
+        active_excitatory = np.setdiff1d(self._active, all_neg_inds)
+        node_transition_probs = node_transition_probs[active_excitatory]
 
         transmission_indicator = np.random.binomial(
             np.ones(node_transition_probs.shape, dtype=int), node_transition_probs
