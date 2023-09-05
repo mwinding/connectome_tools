@@ -1,6 +1,8 @@
 connectome_tools
 ==============================
-tools to analyze connectomics data from a CATMAID instance; includes modified scripts from neurodata/maggot_models by bdpedigo and from mwinding/connectome_analysis  
+tools to analyze connectomics data from a CATMAID instance; includes modified scripts from neurodata/maggot_models by bdpedigo and from mwinding/connectome_analysis
+
+Version 2.0.0: includes signal cascade algorithm that can interpret excitatory and inhibitory connections
 
 Installation and setup
 --------
