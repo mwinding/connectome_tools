@@ -48,11 +48,9 @@ def get_connectors(nl):
     connectors.reset_index(inplace=True)
     return connectors
 
-
-def _append_labeled_nodes(add_list, nodes, name):
+def _append_labeled_nodes(add_list, nodes, name, skid):
     for node in nodes:
-        add_list.append({"node_id": node, "node_type": name})
-
+        add_list.append({"skid": skid, "node_id": node, "node_type": name})
 
 def _standard_split(n, treenode_info, splits):
     skid = int(n.skeleton_id)
@@ -63,7 +61,7 @@ def _standard_split(n, treenode_info, splits):
     # axon(s)
     for f in fragments[:-1]:
         axon_treenodes = f.nodes.node_id.values
-        _append_labeled_nodes(treenode_info, axon_treenodes, "axon")
+        _append_labeled_nodes(treenode_info, axon_treenodes, "axon", skid)
 
     # dendrite
     dendrite = fragments[-1]
@@ -77,7 +75,7 @@ def _standard_split(n, treenode_info, splits):
         for f in fragments[:-1]:
             pprint.pprint(f.tags)
     dend_treenodes = fragments[-1].nodes.node_id.values
-    _append_labeled_nodes(treenode_info, dend_treenodes, "dendrite")
+    _append_labeled_nodes(treenode_info, dend_treenodes, "dendrite", skid)
 
 
 def _special_mbon_split(n, treenode_info, output_path):
@@ -108,11 +106,11 @@ def _special_mbon_split(n, treenode_info, output_path):
 
     for a in axons:
         axon_treenodes = a.nodes.node_id.values
-        _append_labeled_nodes(treenode_info, axon_treenodes, "axon")
+        _append_labeled_nodes(treenode_info, axon_treenodes, "axon", skid)
 
     for d in dendrites:
         dendrite_treenodes = d.nodes.node_id.values
-        _append_labeled_nodes(treenode_info, dendrite_treenodes, "dendrite")
+        _append_labeled_nodes(treenode_info, dendrite_treenodes, "dendrite", skid)
 
     fig = plt.figure(figsize=(10, 10))
     ax = fig.add_subplot(111, projection="3d")
@@ -156,7 +154,7 @@ def get_treenode_types(nl, splits, special_ids, output_path):
         else:  # unsplittable neuron
             # TODO explicitly check that these are unsplittable
             unsplit_treenodes = n.nodes.node_id.values
-            _append_labeled_nodes(treenode_info, unsplit_treenodes, "unsplit")
+            _append_labeled_nodes(treenode_info, unsplit_treenodes, "unsplit", skid)
 
     treenode_df = pd.DataFrame(treenode_info)
     # a split node is included in pre and post synaptic fragments
@@ -164,7 +162,7 @@ def get_treenode_types(nl, splits, special_ids, output_path):
     # NOTE: would probably throw an error later if there was
     treenode_df = treenode_df[~treenode_df["node_id"].duplicated(keep=False)]
     treenode_series = treenode_df.set_index("node_id")["node_type"]
-    return treenode_series
+    return treenode_series, treenode_df
 
 
 def flatten_compartment_types(synaptic_type):
@@ -328,7 +326,7 @@ def adj_split_axons_dendrites(all_neurons, split_tag, special_split_tags, not_sp
 
     print("Getting treenode compartment types...")
     currtime = time.time()
-    treenode_types = get_treenode_types(nl, splits, special_ids, output_path)
+    treenode_types, treenode_df = get_treenode_types(nl, splits, special_ids, output_path)
     print(f"{time.time() - currtime:.3f} elapsed.\n")
 
 
@@ -431,12 +429,18 @@ def adj_split_axons_dendrites(all_neurons, split_tag, special_split_tags, not_sp
 
     ########
     # saving data
+    print("Saving treenode dataframe...")
+    treenode_df.to_csv(output_path / "treenode_df.csv")
+
+    print("Saving connector dataframe...")
+
     print("Saving metadata as csv...")
     meta.to_csv(output_path / "meta_data.csv")
     meta.to_csv(output_path / "meta_data_unmodified.csv")
 
     print("Saving connectors as csv...")
     connectors.to_csv(output_path / "connectors.csv")
+    subgraph_connectors.to_csv(output_path / "subgraph_connectors.csv")
 
     print("Saving each flattened color graph as graphml...")
     for graph_type in graph_types:
