@@ -221,8 +221,7 @@ def adj_split_axons_dendrites(all_neurons, split_tag, special_split_tags, not_sp
         today = data_date
 
     output_path = Path(f"data/processed/{today}")
-    if not os.path.isdir(output_path):
-        os.mkdir(output_path)
+    os.makedirs(output_path, exist_ok=True)
 
     print("Pulling neurons...\n")
 
@@ -243,7 +242,7 @@ def adj_split_axons_dendrites(all_neurons, split_tag, special_split_tags, not_sp
     nl = pymaid.get_neuron(
         ids[i * batch_size : (i + 1) * batch_size], with_connectors=False
     )
-    print(f"{time.time() - currtime:.3f} seconds elapsed for batch {i}.")
+    print(f"{time.time() - currtime:.3f} seconds elapsed for batch {i} of {batch_size * n_batches}.")
     for i in range(1, n_batches):
         currtime = time.time()
         n_tries = 0
@@ -257,7 +256,7 @@ def adj_split_axons_dendrites(all_neurons, split_tag, special_split_tags, not_sp
             except ChunkedEncodingError:
                 print(f"Failed pull on batch {i}, trying again...")
                 n_tries += 1
-        print(f"{time.time() - currtime:.3f} seconds elapsed for batch {i}.")
+        print(f"{time.time() - currtime:.3f} seconds elapsed for batch {i} of {batch_size * n_batches}.")
 
     print("\nPulled all neurons.\b")
 
@@ -427,10 +426,31 @@ def adj_split_axons_dendrites(all_neurons, split_tag, special_split_tags, not_sp
 
     flat_g = flatten_muligraph(full_g, meta_data_dict)
 
+
+    ########
+    # linking axon/dendrite identity to morphologies
+    morpho = nl.nodes.drop(['confidence', 'creator_id', 'radius'], axis=1)
+    morpho = pd.merge(morpho, treenode_df[['node_id', 'node_type']], on='node_id', how='left') 
+    morpho = morpho.rename(columns={'neuron': 'neuron_id'})
+
     ########
     # saving data
     print("Saving treenode dataframe...")
+    treenode_df = treenode_df.rename(columns={'skid': 'neuron_id'})
     treenode_df.to_csv(output_path / "treenode_df.csv")
+
+    # saving morphology data
+    print("Saving morphologies...")
+    morpho.to_csv(output_path / "all_morphologies.csv")
+
+    grouped = morpho.groupby('neuron_id')
+
+    os.makedirs(output_path / "morphologies")
+    dfs = {}
+    for neuron, group in grouped:
+        # Assign the group (which is a DataFrame) to the dictionary
+        dfs[neuron] = group
+        dfs[neuron].to_csv(output_path / f"morphologies/morpho_neuron-ID_{neuron}.csv")
 
     print("Saving connector dataframe...")
 
@@ -439,7 +459,10 @@ def adj_split_axons_dendrites(all_neurons, split_tag, special_split_tags, not_sp
     meta.to_csv(output_path / "meta_data_unmodified.csv")
 
     print("Saving connectors as csv...")
+    connectors = connectors.rename(columns={'compartment_type' : 'synapse_type'})
     connectors.to_csv(output_path / "connectors.csv")
+    subgraph_connectors.reset_index()
+    subgraph_connectors = subgraph_connectors.rename(columns={'compartment_type' : 'synapse_type'})
     subgraph_connectors.to_csv(output_path / "subgraph_connectors.csv")
 
     print("Saving each flattened color graph as graphml...")
@@ -479,7 +502,7 @@ def adj_split_axons_dendrites(all_neurons, split_tag, special_split_tags, not_sp
     # add back in skids with no edges (with rows/columns of 0); simplifies some later analysis
     def refill_adjs(adj, adj_all):
         skids_diff = np.setdiff1d(adj_all.index, adj.index)
-        adj = adj.append(pd.DataFrame([[0.0]*adj.shape[1]]*len(skids_diff), index = skids_diff, columns = adj.columns)) # add in rows with 0s
+        adj = pd.concat([adj, pd.DataFrame([[0.0]*adj.shape[1]]*len(skids_diff), index = skids_diff, columns = adj.columns)]) # add in rows with 0s
         for skid in skids_diff:
             adj[skid]=[0.0]*len(adj.index)
         return(adj)
@@ -505,6 +528,7 @@ def adj_split_axons_dendrites(all_neurons, split_tag, special_split_tags, not_sp
     adj_dd = adj_dd.loc[sorted_index, sorted_index]
 
     # export adjacency matrices
+    os.makedirs('data/adj', exist_ok=True)
     adj_all.to_csv(f'data/adj/all-all_{today}.csv')
     adj_ad.to_csv(f'data/adj/ad_{today}.csv')
     adj_aa.to_csv(f'data/adj/aa_{today}.csv')
