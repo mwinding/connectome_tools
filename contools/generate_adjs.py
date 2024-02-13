@@ -441,7 +441,7 @@ def adj_split_axons_dendrites(all_neurons, split_tag, special_split_tags, not_sp
 
     # saving morphology data
     print("Saving morphologies...")
-    morpho.to_csv(output_path / "all_morphologies.csv")
+    morpho.to_csv(output_path / "all-morphologies.csv")
 
     grouped = morpho.groupby('neuron_id')
 
@@ -461,9 +461,14 @@ def adj_split_axons_dendrites(all_neurons, split_tag, special_split_tags, not_sp
     print("Saving connectors as csv...")
     connectors = connectors.rename(columns={'compartment_type' : 'synapse_type'})
     connectors.to_csv(output_path / "connectors.csv")
-    subgraph_connectors.reset_index()
-    subgraph_connectors = subgraph_connectors.rename(columns={'compartment_type' : 'synapse_type'})
-    subgraph_connectors.to_csv(output_path / "subgraph_connectors.csv")
+    subgraph_connectors = subgraph_connectors.reset_index()
+    subgraph_connectors = subgraph_connectors.rename(columns={'compartment_type' : 'synapse_type', # renaming columns in more intuitive ways
+                                                                'presynaptic_to' : 'presynaptic_neuron',
+                                                                'presynaptic_to_node' : 'presynaptic_node',
+                                                                'postsynaptic_to' : 'postsynaptic_node',
+                                                                'postsynaptic_to_node' : 'postsynaptic_node'})
+
+    subgraph_connectors.to_csv(output_path / f"subgraph-connectors.csv")
 
     print("Saving each flattened color graph as graphml...")
     for graph_type in graph_types:
