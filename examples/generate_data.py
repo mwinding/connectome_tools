@@ -6,7 +6,7 @@ import numpy as np
 from datetime import datetime
 
 from pymaid_creds import url, name, password, token
-from data_settings import data_date, pairs_path
+from data_settings import pairs_path
 data_date = datetime.today().strftime('%Y-%m-%d')
 rm = pymaid.CatmaidInstance(url, token, name, password)
 
